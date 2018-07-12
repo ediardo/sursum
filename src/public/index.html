@@ -1,0 +1,153 @@
+<html>
+  <head>
+    <title>Sursum Versus</title>
+    
+  </head>
+  <body>
+    <div id="app">
+
+    </div>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <script type="text/babel">
+          
+      class NavBar extends HTMLUListElement {
+        constructor() {
+          super();
+        }
+      }
+
+      class NavLink extends HTMLUListElement {
+        constructor() {
+          super();
+        }
+      }
+
+      class ThemeSection extends HTMLElement {
+        constructor() {
+          super();
+        }
+      }
+
+      class ThemeSectionArrays extends HTMLElement {
+        constructor() {
+          super();
+        }
+        
+        connectedCallback() {
+          var template = `
+            <style>
+              .theme-section-arrays {
+                background-color: #F0FFFF;
+              }
+            </style>
+            <div class="theme-section-arrays">
+
+            </div>
+          `;
+        }
+      }
+
+      class ThemeSectionStrings extends HTMLElement {
+        constructor() {
+          super();
+        }
+      }
+
+      class ThemeLists extends ThemeSection {
+        constructor() {
+          super();
+        }
+      }
+
+      class ThemeQueues extends ThemeSection {
+        constructor() {
+          super();
+        }
+      }
+
+      window.customElements.define("nav-bar", NavBar, { extends: 'ul' });
+      window.customElements.define("nav-link", NavLink, { extends: 'li' });
+      window.customElements.define("theme-section-arrays", ThemeSectionArrays);
+      window.customElements.define("theme-section-strings", ThemeSectionStrings);
+      /*
+      const createNavBar () => {
+        let fragment = document.createDocumentFragment();
+        themes.forEach(theme => {
+          let themeNavItem = 
+        });
+      };
+
+      const createThemes = () => {
+        let fragment = document.createDocumentFragment();
+        const createTitle = title => {
+          let h1 = document.createElement("h1");
+          h1.className = "title";
+          h1.textContent = title.charAt(0).toUpperCase() + title.substr(1);
+          return h1;
+        };
+        
+        themes.forEach(theme => {
+          let themeSection = document.createElement("div");
+          themeSection.className = `theme-section-${theme.toLowerCase()}`;
+          themeSection.appendChild(createTitle(theme));
+          fragment.appendChild(themeSection);
+        });
+        app.appendChild(fragment);
+      };
+      */
+
+      /*
+       Utils
+      */
+      String.prototype.capitalize = function () {
+        return this.charAt(0).toUpperCase() + this.substr(1);
+      };
+      
+
+      /*
+      * IIFE (immediately invoked function expression) 
+      */
+      const themes = [
+        { component: ThemeSectionArrays, name: "arrays" },
+        { component: ThemeSectionStrings, name: "strings" }
+      ];
+
+      ((themes) => {
+        var app = document.getElementById("app");
+        
+        let fragment = document.createDocumentFragment();
+        
+
+        const createNavBar = () => {
+          let navBar = document.createElement("nav-bar", { is: "ul"});
+          const createLinks = theme => {
+            let themeLink = document.createElement("a");
+            themeLink.setAttribute("href", `#${theme.name}`);
+            navBar.appendChild(themeLink);
+          };
+          themes.forEach(drawNavBar);
+          return navBar;
+        };
+
+        const createSections = () => {
+
+        };
+
+        /*
+        themes.forEach(theme => {
+          let navLink = document.createElement(theme.component);
+          navLink.textContent = theme.capitalize();
+          navLink.setAttribute("href", `#${theme.name}`)
+          navBar.appendChild(navLink);
+        });
+        */
+      
+        fragment.appendChild(createNavBar);
+        
+        app.appendChild(fragment);
+      })(themes);
+
+    </script>
+  </body>
+</html>
