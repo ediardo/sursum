@@ -1,150 +1,83 @@
 <html>
   <head>
     <title>Sursum Versus</title>
-    
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="sursum.js" type="text/babel"></script>
+
+    <style>
+      .item {
+        border: 1px solid black;
+        padding: 0 10px;
+      }
+    </style>
   </head>
   <body>
-    <div id="app">
+    <div id="app" class="container-fluid">
+      <h1>Sursum Versus</h1>
+      <div class="themes">
+        <!--
+        <div class="arrays">
+          <h1>Arrays</h1>
+          <div class="array-sorting">
+            <h2>Sorting</h2>                 
+            <div id="array-sorting-bubble">
+              <h4>Bubble Sort</h4>
+              <div class="controllers">
+                <div class="manual">
+                  <input type="text" name="" placeholder="comma-separated values" />
+                </div>
+                <div class="auto">
+                  <button type="button">Generate random</button>
+                </div>
+              </div>
+              <div>
+                <button type="button" class="execute" >Execute</button>
+              </div>
+              <div class="array">
+                  
+              </div>
+            </div>
+          </div>
+          
+          <div class="array-searching">
+            <h2>Searching</h2>
+            <h4>Find sub-array with given sum</h4>
+            <h4>Find the min/max value</h4>
+          </div>
 
+          <div class="array-rotation">
+            <h2>Rotation</h2>
+            <h4>Rotate</h4>
+          </div>
+
+
+        </div>
+        -->
+      </div>
     </div>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
     <script type="text/babel">
-          
-      class NavBar extends HTMLUListElement {
-        constructor() {
-          super();
-        }
-      }
 
-      class NavLink extends HTMLUListElement {
-        constructor() {
-          super();
-        }
-      }
-
-      class ThemeSection extends HTMLElement {
-        constructor() {
-          super();
-        }
-      }
-
-      class ThemeSectionArrays extends HTMLElement {
-        constructor() {
-          super();
-        }
-        
-        connectedCallback() {
-          var template = `
-            <style>
-              .theme-section-arrays {
-                background-color: #F0FFFF;
-              }
-            </style>
-            <div class="theme-section-arrays">
-
-            </div>
-          `;
-        }
-      }
-
-      class ThemeSectionStrings extends HTMLElement {
-        constructor() {
-          super();
-        }
-      }
-
-      class ThemeLists extends ThemeSection {
-        constructor() {
-          super();
-        }
-      }
-
-      class ThemeQueues extends ThemeSection {
-        constructor() {
-          super();
-        }
-      }
-
-      window.customElements.define("nav-bar", NavBar, { extends: 'ul' });
-      window.customElements.define("nav-link", NavLink, { extends: 'li' });
-      window.customElements.define("theme-section-arrays", ThemeSectionArrays);
-      window.customElements.define("theme-section-strings", ThemeSectionStrings);
-      /*
-      const createNavBar () => {
-        let fragment = document.createDocumentFragment();
-        themes.forEach(theme => {
-          let themeNavItem = 
-        });
-      };
-
-      const createThemes = () => {
-        let fragment = document.createDocumentFragment();
-        const createTitle = title => {
-          let h1 = document.createElement("h1");
-          h1.className = "title";
-          h1.textContent = title.charAt(0).toUpperCase() + title.substr(1);
-          return h1;
-        };
-        
-        themes.forEach(theme => {
-          let themeSection = document.createElement("div");
-          themeSection.className = `theme-section-${theme.toLowerCase()}`;
-          themeSection.appendChild(createTitle(theme));
-          fragment.appendChild(themeSection);
-        });
-        app.appendChild(fragment);
-      };
-      */
-
-      /*
-       Utils
-      */
-      String.prototype.capitalize = function () {
-        return this.charAt(0).toUpperCase() + this.substr(1);
-      };
-      
 
       /*
       * IIFE (immediately invoked function expression) 
       */
       const themes = [
-        { component: ThemeSectionArrays, name: "arrays" },
-        { component: ThemeSectionStrings, name: "strings" }
+        { name: "arrays" },
+        { name: "strings" }
       ];
 
       ((themes) => {
-        var app = document.getElementById("app");
-        
+        var app = document.getElementById("app");  
         let fragment = document.createDocumentFragment();
+    
+
+        // const arrayInsertionSort = new ArrayTheme("array-sorting-insertion", "insertionSort");
+        //const arrayBubbleSort = new ArrayTheme("array-sorting-bubble", "bubbleSort");
         
-
-        const createNavBar = () => {
-          let navBar = document.createElement("nav-bar", { is: "ul"});
-          const createLinks = theme => {
-            let themeLink = document.createElement("a");
-            themeLink.setAttribute("href", `#${theme.name}`);
-            navBar.appendChild(themeLink);
-          };
-          themes.forEach(drawNavBar);
-          return navBar;
-        };
-
-        const createSections = () => {
-
-        };
-
-        /*
-        themes.forEach(theme => {
-          let navLink = document.createElement(theme.component);
-          navLink.textContent = theme.capitalize();
-          navLink.setAttribute("href", `#${theme.name}`)
-          navBar.appendChild(navLink);
-        });
-        */
-      
-        fragment.appendChild(createNavBar);
         
+        fragment.appendChild(new ListTheme());
         app.appendChild(fragment);
       })(themes);
 
