@@ -3,83 +3,136 @@
     <title>Sursum Versus</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.6.5/svg.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
+
     <script src="sursum.js" type="text/babel"></script>
 
     <style>
-      .item {
-        border: 1px solid black;
-        padding: 0 10px;
+      html, body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+      }
+      
+      ul {
+        margin: 0;
+        padding:0;
+      }
+
+      li {
+        list-style-type: none;
+        display: inline;
+      }
+      .data-structures, .ops { 
+        font-family: 'Ubuntu Mono', monospace;      
+      }
+      #header .data-structures {
+        font-size: 1.3rem;
+      }
+      #header .ops {
+        font-size: 1.1rem;
+      }
+      #header .data-structures button {
+        background-color: white;
+        border: 0;
+      }
+      
+
+      svg {
+        font-family: 'Ubuntu Mono', monospace;
+      }
+      #header .ops button {
+        border: 1px;
+      }
+      span.input {
+        background-color:yellow;
+        display: inline-block;
+        min-width: 30px;
+      }
+      
+
+      [contenteditable=true]:empty:before {
+        content: attr(placeholder);
+        display: block; /* For Firefox */
+        font-style:italic;
       }
     </style>
   </head>
   <body>
     <div id="app" class="container-fluid">
-      <h1>Sursum Versus</h1>
-      <div class="themes">
-        <!--
-        <div class="arrays">
-          <h1>Arrays</h1>
-          <div class="array-sorting">
-            <h2>Sorting</h2>                 
-            <div id="array-sorting-bubble">
-              <h4>Bubble Sort</h4>
-              <div class="controllers">
-                <div class="manual">
-                  <input type="text" name="" placeholder="comma-separated values" />
-                </div>
-                <div class="auto">
-                  <button type="button">Generate random</button>
-                </div>
-              </div>
-              <div>
-                <button type="button" class="execute" >Execute</button>
-              </div>
-              <div class="array">
-                  
-              </div>
-            </div>
-          </div>
-          
-          <div class="array-searching">
-            <h2>Searching</h2>
-            <h4>Find sub-array with given sum</h4>
-            <h4>Find the min/max value</h4>
-          </div>
-
-          <div class="array-rotation">
-            <h2>Rotation</h2>
-            <h4>Rotate</h4>
-          </div>
-
-
+      <div id="header">
+        <div class="data-structures">
+          <ul>
+            <li>
+              <button type="button" name="lists" data-has-operations="true">linked list</button>
+            </li>
+            <li>
+              <button type="button" name="bst" data-has-operations="true">binary search tree</button>
+            </li>
+          </ul>
         </div>
-        -->
+
+        <div class="ops">
+          <ul class="ops-lists">
+            <li data-has-input="false" data-structure="linkedList" data-op-name="new">
+              new LinkedList()
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="linkedList" data-op-name="append">
+              append(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val" data-max-length="3"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="linkedList" data-op-name="prepend">
+              prepend(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3" ></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="linkedList" data-op-name="insertAtPos">
+              insertAtPos(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>
+,              <span contenteditable="true" placeholder="pos"  class="input" data-param-name="pos" data-max-length="2"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="linkedList" data-op-name="removeAtPos">
+              removeAtPos(<span contenteditable="true"  placeholder="pos" class="input"  data-param-name="pos" data-max-length="2"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+          </ul>
+          <ul class="ops-lists">
+            <li data-has-input="false" data-structure="bstNode" data-op-name="new">
+              new BinaryTreeNode()
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="bstNode" data-op-name="insert">
+              insert(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="bstNode" data-op-name="contains">
+              contains(<span contenteditable="true" placeholder="val" class="input" data-param-name="val"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            </li>
+          </ul>          
+        </div>
       </div>
+      <div id="whiteboard-container">
+        <svg version="1.1" baseProfile="full" width="100%" height="100%" id="whiteboard">
+          </svg>
+      </div>
+      <div id="footer"></div>
+      
+
     </div>
 
     <script type="text/babel">
-
-
       /*
       * IIFE (immediately invoked function expression) 
       */
-      const themes = [
-        { name: "arrays" },
-        { name: "strings" }
-      ];
-
-      ((themes) => {
+      const initialState = {};
+      ((state) => {
         var app = document.getElementById("app");  
-        let fragment = document.createDocumentFragment();
-    
-
-        // const arrayInsertionSort = new ArrayTheme("array-sorting-insertion", "insertionSort");
-        //const arrayBubbleSort = new ArrayTheme("array-sorting-bubble", "bubbleSort");
-        
-        
-        fragment.appendChild(new ListTheme());
-        app.appendChild(fragment);
-      })(themes);
+      
+        let whiteboard = new Whiteboard(state);
+      })(initialState, );
 
     </script>
   </body>
