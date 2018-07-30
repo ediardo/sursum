@@ -5,9 +5,7 @@
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.6.5/svg.min.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
-
     <script src="sursum.js" type="text/babel"></script>
-
     <style>
       html, body {
         height: 100%;
@@ -88,18 +86,21 @@
               <button type="button" name="return">↵</button>
             </li>
             <li data-has-input="true" data-structure="linkedList" data-op-name="insertAtPos">
-              insertAtPos(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>
-,              <span contenteditable="true" placeholder="pos"  class="input" data-param-name="pos" data-max-length="2"></span>)
+              insertAtPos(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>,
+              <span contenteditable="true" placeholder="pos"  class="input" data-param-name="pos" data-max-length="2"></span>)
               <button type="button" name="return">↵</button>
             </li>
             <li data-has-input="true" data-structure="linkedList" data-op-name="removeAtPos">
               removeAtPos(<span contenteditable="true"  placeholder="pos" class="input"  data-param-name="pos" data-max-length="2"></span>)
               <button type="button" name="return">↵</button>
             </li>
+            <li data-has-input="true" data-structure="linkedLIst" data-op-name"findByValue">
+              findByValue(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
+            </li>
           </ul>
           <ul class="ops-lists">
-            <li data-has-input="false" data-structure="bstNode" data-op-name="new">
-              new BinaryTreeNode()
+            <li data-has-input="true" data-structure="bstNode" data-op-name="new">
+              new BinaryTreeNode(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val"></span>)
               <button type="button" name="return">↵</button>
             </li>
             <li data-has-input="true" data-structure="bstNode" data-op-name="insert">
