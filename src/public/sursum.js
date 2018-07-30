@@ -181,11 +181,11 @@ class VisualBSTNode extends Node {
     if (this.descendantType === "rChild") {
       const newX = nodeFig.attr({
         x: `${50 + (50 * 1) / (level + 1)}%`,
-        y: `${level * h}%`
+        y: `${level * h}`
       });
     } else if (this.descendantType === "lChild") {
     } else {
-      nodeFig.attr({ x: "50%", y: "0%" });
+      nodeFig.attr({ x: this.whiteboard.width() / 2 - w / 2, y: "0%" });
     }
   }
 }
