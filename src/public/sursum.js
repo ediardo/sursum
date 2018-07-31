@@ -78,40 +78,80 @@ class VisualBSTNode extends Node {
     size = { w: 100, h: 50 },
     pos = { x: 0, y: 0 },
     level = 0,
-    descendantType = "root"
+    column = 8
   }) {
     super(value);
-    console.log(value, left, right, size, pos, level);
+    console.log(value, left, right, size, pos, level, column);
     this.left = left;
     this.right = right;
-    this.whiteboard = whiteboard;
-    this.size = size;
-    this.pos = pos;
-    this.level = level;
-    this.descendantType = descendantType;
+    this._whiteboard = whiteboard;
+    this._size = size;
+    this._pos = pos;
+    this._level = level;
+    this._column = column;
     this._drawNode();
   }
 
   insert(value, level = 0) {
+    console.log(
+      `Current node ${this.value} with left child ${
+        this.left
+      } and right child ${this.right}`
+    );
     if (value > this.value) {
       if (this.right === null) {
+        console.log(
+          `My Parent is: ${this.value} because ${value} > ${this.value}`
+        );
         level++;
+        let newColumn;
+        if (level === 1) {
+          //console.log(`$_parentColumn: ${_parentColumn} + 4`);
+          newColumn = this._column + 4;
+        } else if (level === 2) {
+          //console.log(`$_parentColumn: ${_parentColumn} + 2`);
+          newColumn = this._column + 2;
+        } else if (level === 3) {
+          //console.log(`$_parentColumn: ${_parentColumn} + 1`);
+          newColumn = this._column + 1;
+        }
         this.right = new VisualBSTNode({
           value,
-          whiteboard: this.whiteboard,
-          size: this.size,
-          descendantType: "rChild",
+          whiteboard: this._whiteboard,
+          size: this._size,
+          parentColumn: newColumn,
           level
         });
       } else {
-        console.log(level);
         this.right.insert(value, level + 1);
       }
     } else {
       if (this.left === null) {
-        this.left = new VisualBSTNode(value);
+        console.log(
+          `My Parent is: ${this.value} because ${value} <= ${this.value}`
+        );
+
+        level++;
+        let newColumn;
+        if (level === 1) {
+          //console.log(`$_parentColumn: ${_parentColumn} - 4`);
+          newColumn = this._column - 4;
+        } else if (level === 2) {
+          //console.log(`$_parentColumn: ${_parentColumn} - 2`);
+          newColumn = this._column - 2;
+        } else if (level === 3) {
+          //console.log(`$_parentColumn: ${_parentColumn} -1`);
+          newColumn = this._column - 1;
+        }
+        this.left = new VisualBSTNode({
+          value,
+          whiteboard: this._whiteboard,
+          size: this._size,
+          parentColumn: newColumn,
+          level
+        });
       } else {
-        this.left.insert(value);
+        this.left.insert(value, level + 1);
       }
     }
   }
@@ -135,7 +175,7 @@ class VisualBSTNode extends Node {
   }
 
   _datumSVG(wrapper) {
-    const { w, h } = this.size;
+    const { w, h } = this._size;
     let datum = wrapper.group();
     datum
       .rect(w * 0.7, h)
@@ -145,11 +185,10 @@ class VisualBSTNode extends Node {
         "stroke-width": 1
       })
       .move(w * 0.15, 0);
-    datum.text(this.value).center(w / 2, h / 2);
+    datum.text(this.value.toString()).center(w / 2, h / 2);
   }
-
   _rightChildSVG(wrapper) {
-    const { w, h } = this.size;
+    const { w, h } = this._size;
     let rightChild = wrapper.group();
     rightChild.rect(w * 0.15 + 1, h).attr({
       fill: "#FFF",
@@ -159,7 +198,7 @@ class VisualBSTNode extends Node {
   }
 
   _leftChildSVG(wrapper) {
-    const { w, h } = this.size;
+    const { w, h } = this._size;
     let leftChild = wrapper.group();
     leftChild
       .rect(w * 0.15 - 1, h)
@@ -171,22 +210,39 @@ class VisualBSTNode extends Node {
       .move(w * 0.85, 0);
   }
 
+  _calculateColumnCoords(column, level) {}
+
+  _edgeSVG(wrapper, level, column) {
+    switch (level) {
+      case "1":
+        break;
+      case "2":
+        break;
+      case "3":
+        break;
+      default:
+        console.log("Too many levels");
+    }
+  }
+
   _drawNode() {
-    const { w, h } = this.size;
-    const { level } = this;
-    let nodeFig = this.whiteboard.nested();
+    const { w, h } = this._size;
+    const [whiteboardWidth, whiteboadHeight] = [
+      this._whiteboard.width(),
+      this._whiteboard.width()
+    ];
+    const { _level, _column } = this;
+    let nodeFig = this._whiteboard.nested();
     this._rightChildSVG(nodeFig);
     this._leftChildSVG(nodeFig);
     this._datumSVG(nodeFig);
-    if (this.descendantType === "rChild") {
-      const newX = nodeFig.attr({
-        x: `${50 + (50 * 1) / (level + 1)}%`,
-        y: `${level * h}`
-      });
-    } else if (this.descendantType === "lChild") {
-    } else {
-      nodeFig.attr({ x: this.whiteboard.width() / 2 - w / 2, y: "0%" });
-    }
+    this._edgeSVG(nodeFig, _level, _column);
+    this._id = nodeFig.id();
+
+    nodeFig.attr({
+      x: (whiteboardWidth / 15) * _column - w,
+      y: h * _level + 1
+    });
   }
 }
 
@@ -209,7 +265,7 @@ class VisualListNode extends ListNode {
       stroke: "#333",
       "stroke-width": 1
     });
-    datum.text(this.value).attr({
+    datum.text(this.value.toString()).attr({
       width: w,
       height: h
     });
@@ -442,6 +498,7 @@ class VisualLinkedLIst {
     }
     return null;
   }
+
   // removes a node at k position and returns true, false if not found
   removeAtPosition(index) {
     if (this.head === null) return null;
@@ -511,7 +568,7 @@ class Whiteboard {
   constructor(state) {
     this.setupListeners();
     this.whiteboard = SVG("whiteboard");
-    this.nodeSize = { w: 100, h: 50 };
+    this.nodeSize = { w: 70, h: 50 };
   }
 
   setupListeners() {
@@ -548,6 +605,7 @@ class Whiteboard {
   linkedListOps(op, params) {
     switch (op) {
       case "new":
+        this.clearWhiteboard();
         this.visualLinkedList = new VisualLinkedLIst(this.whiteboard);
         break;
       case "append":
@@ -573,19 +631,19 @@ class Whiteboard {
   }
 
   bstOps(op, params) {
-    const { whiteboard } = this;
-    const { nodeSize: size } = this.nodeSize;
+    const { nodeSize: size, whiteboard } = this;
+
     switch (op) {
       case "new":
         this.clearWhiteboard();
         this.visualBSTNode = new VisualBSTNode({
-          value: params.val,
+          value: parseInt(params.val),
           whiteboard,
           size
         });
         break;
       case "insert":
-        this.visualBSTNode.insert(params.val);
+        this.visualBSTNode.insert(parseInt(params.val));
         break;
       case "contains":
         this.visualBSTNode.VisualBSTNode(params.val);
