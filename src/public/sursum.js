@@ -81,7 +81,6 @@ class VisualBSTNode extends Node {
     column = 16
   }) {
     super(value);
-    console.log(value, left, right, size, pos, level, column);
     this.left = left;
     this.right = right;
     this._whiteboard = whiteboard;
@@ -103,13 +102,10 @@ class VisualBSTNode extends Node {
         level++;
         let newColumn;
         if (level === 1) {
-          //console.log(`$_parentColumn: ${_parentColumn} + 4`);
           newColumn = this._column + 8;
         } else if (level === 2) {
-          //console.log(`$_parentColumn: ${_parentColumn} + 2`);
           newColumn = this._column + 4;
         } else if (level === 3) {
-          //console.log(`$_parentColumn: ${_parentColumn} + 1`);
           newColumn = this._column + 2;
         } else if (level === 4) {
           newColumn = this._column + 1;
@@ -129,13 +125,10 @@ class VisualBSTNode extends Node {
         level++;
         let newColumn;
         if (level === 1) {
-          //console.log(`$_parentColumn: ${_parentColumn} - 4`);
           newColumn = this._column - 8;
         } else if (level === 2) {
-          //console.log(`$_parentColumn: ${_parentColumn} - 2`);
           newColumn = this._column - 4;
         } else if (level === 3) {
-          //console.log(`$_parentColumn: ${_parentColumn} -1`);
           newColumn = this._column - 2;
         } else if (level === 4) {
           newColumn = this._column - 1;
@@ -171,14 +164,37 @@ class VisualBSTNode extends Node {
     }
   }
 
+  getAncestors(rootNode, target) {
+    if (rootNode === null) {
+      return false;
+    }
+
+    if (rootNode.value === target) {
+      return true;
+    }
+
+    if (
+      this.getAncestors(rootNode.left, target) ||
+      this.getAncestors(rootNode.right, target)
+    ) {
+      console.log(rootNode.value);
+      return true;
+    }
+    return false;
+  }
+
   _datumSVG(wrapper) {
     const { w, h } = this._size;
     let datum = wrapper.group();
-    datum.circle(w).attr({
-      fill: "#FFF",
-      stroke: "#333",
-      "stroke-width": 2
-    });
+    datum
+      .circle(w)
+      .attr({
+        fill: "#FFF",
+        stroke: "#333",
+        "stroke-width": 2,
+        "data-node-value": this.value.toString()
+      })
+      .addClass("tree-node");
     datum.text(this.value.toString()).center(w / 2, w / 2);
   }
   _rightChildSVG(wrapper) {
@@ -546,7 +562,6 @@ class VisualLinkedLIst {
       this.animateDeleteNode(this.head);
       this.head = this.head.next;
       this.animateOffsetTail(this.head, "negative");
-
       this.toString();
       return true;
     }
@@ -687,6 +702,12 @@ class Whiteboard {
         break;
       case "contains":
         this.visualBSTNode.VisualBSTNode(params.val);
+        break;
+      case "getAncestors":
+        this.visualBSTNode.getAncestors(
+          this.visualBSTNode,
+          parseInt(params.val)
+        );
         break;
       default:
         console.log("Unknown operation");
