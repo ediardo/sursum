@@ -78,7 +78,7 @@ class VisualBSTNode extends Node {
     size = { w: 100, h: 50 },
     pos = { x: 0, y: 0 },
     level = 0,
-    column = 8
+    column = 16
   }) {
     super(value);
     console.log(value, left, right, size, pos, level, column);
@@ -100,26 +100,25 @@ class VisualBSTNode extends Node {
     );
     if (value > this.value) {
       if (this.right === null) {
-        console.log(
-          `My Parent is: ${this.value} because ${value} > ${this.value}`
-        );
         level++;
         let newColumn;
         if (level === 1) {
           //console.log(`$_parentColumn: ${_parentColumn} + 4`);
-          newColumn = this._column + 4;
+          newColumn = this._column + 8;
         } else if (level === 2) {
           //console.log(`$_parentColumn: ${_parentColumn} + 2`);
-          newColumn = this._column + 2;
+          newColumn = this._column + 4;
         } else if (level === 3) {
           //console.log(`$_parentColumn: ${_parentColumn} + 1`);
+          newColumn = this._column + 2;
+        } else if (level === 4) {
           newColumn = this._column + 1;
         }
         this.right = new VisualBSTNode({
           value,
           whiteboard: this._whiteboard,
           size: this._size,
-          parentColumn: newColumn,
+          column: newColumn,
           level
         });
       } else {
@@ -127,27 +126,25 @@ class VisualBSTNode extends Node {
       }
     } else {
       if (this.left === null) {
-        console.log(
-          `My Parent is: ${this.value} because ${value} <= ${this.value}`
-        );
-
         level++;
         let newColumn;
         if (level === 1) {
           //console.log(`$_parentColumn: ${_parentColumn} - 4`);
-          newColumn = this._column - 4;
+          newColumn = this._column - 8;
         } else if (level === 2) {
           //console.log(`$_parentColumn: ${_parentColumn} - 2`);
-          newColumn = this._column - 2;
+          newColumn = this._column - 4;
         } else if (level === 3) {
           //console.log(`$_parentColumn: ${_parentColumn} -1`);
+          newColumn = this._column - 2;
+        } else if (level === 4) {
           newColumn = this._column - 1;
         }
         this.left = new VisualBSTNode({
           value,
           whiteboard: this._whiteboard,
           size: this._size,
-          parentColumn: newColumn,
+          column: newColumn,
           level
         });
       } else {
@@ -177,15 +174,12 @@ class VisualBSTNode extends Node {
   _datumSVG(wrapper) {
     const { w, h } = this._size;
     let datum = wrapper.group();
-    datum
-      .rect(w * 0.7, h)
-      .attr({
-        fill: "#FFF",
-        stroke: "#333",
-        "stroke-width": 1
-      })
-      .move(w * 0.15, 0);
-    datum.text(this.value.toString()).center(w / 2, h / 2);
+    datum.circle(w).attr({
+      fill: "#FFF",
+      stroke: "#333",
+      "stroke-width": 2
+    });
+    datum.text(this.value.toString()).center(w / 2, w / 2);
   }
   _rightChildSVG(wrapper) {
     const { w, h } = this._size;
@@ -210,39 +204,84 @@ class VisualBSTNode extends Node {
       .move(w * 0.85, 0);
   }
 
-  _calculateColumnCoords(column, level) {}
+  _calculateColumnCoords(column, level) {
+    let coords = {};
+    const { w, h } = this._size;
+    coords.x = (1200 / 32) * column;
+    coords.y = (900 / 6) * level;
 
-  _edgeSVG(wrapper, level, column) {
-    switch (level) {
-      case "1":
-        break;
-      case "2":
-        break;
-      case "3":
-        break;
-      default:
-        console.log("Too many levels");
-    }
+    return coords;
   }
 
+  _calculateColumnOffset(column, level) {
+    let offset = 0;
+    switch (level) {
+      case 1:
+        offset = column < 32 / 2 ? 8 : -8;
+        break;
+      case 2:
+        if (column === 4 || column === 20) {
+          offset = 4;
+        } else {
+          offset = -4;
+        }
+        break;
+      case 3:
+        if (column === 2 || column === 10 || column === 18 || column === 26) {
+          offset = 2;
+        } else {
+          offset = -2;
+        }
+        break;
+      case 4:
+        let levelColumns = [1, 5, 9, 13, 17, 21, 25, 29];
+        if (levelColumns.includes(column)) {
+          offset = 1;
+        } else {
+          offset = -1;
+        }
+        break;
+      default:
+        return;
+    }
+    return offset;
+  }
+
+  _edgeSVG(wrapper, column, level) {
+    if (level === 0) {
+      return;
+    }
+    let childCoords = this._calculateColumnCoords(column, level);
+    let parentColumnOffset = this._calculateColumnOffset(column, level);
+
+    let parentCoords = this._calculateColumnCoords(
+      column + parentColumnOffset,
+      level - 1
+    );
+    wrapper
+      .line(
+        childCoords.x,
+        childCoords.y + this._size.w,
+        parentCoords.x,
+        parentCoords.y + this._size.w
+      )
+      .stroke({ width: 1 })
+      .back()
+      .addClass("tree-node-edge");
+  }
   _drawNode() {
     const { w, h } = this._size;
-    const [whiteboardWidth, whiteboadHeight] = [
-      this._whiteboard.width(),
-      this._whiteboard.width()
-    ];
     const { _level, _column } = this;
     let nodeFig = this._whiteboard.nested();
-    this._rightChildSVG(nodeFig);
-    this._leftChildSVG(nodeFig);
+    // this._rightChildSVG(nodeFig);
+    // this._leftChildSVG(nodeFig);
+    this._edgeSVG(this._whiteboard, _column, _level);
     this._datumSVG(nodeFig);
-    this._edgeSVG(nodeFig, _level, _column);
     this._id = nodeFig.id();
-
-    nodeFig.attr({
-      x: (whiteboardWidth / 15) * _column - w,
-      y: h * _level + 1
-    });
+    let coords = this._calculateColumnCoords(_column, _level);
+    //nodeFig.attr({ ...coords, cx: 25, yx: 25 });
+    nodeFig.center(coords.x - w / 2, coords.y + 25);
+    //nodeFig.dx(-w);
   }
 }
 
@@ -254,6 +293,7 @@ class VisualListNode extends ListNode {
     this.x = x;
     this.y = y;
     this.whiteboard = whiteboard;
+
     this.drawNode();
   }
 
@@ -569,6 +609,7 @@ class Whiteboard {
     this.setupListeners();
     this.whiteboard = SVG("whiteboard");
     this.nodeSize = { w: 70, h: 50 };
+    this.drawGuides();
   }
 
   setupListeners() {
@@ -632,14 +673,13 @@ class Whiteboard {
 
   bstOps(op, params) {
     const { nodeSize: size, whiteboard } = this;
-
     switch (op) {
       case "new":
         this.clearWhiteboard();
         this.visualBSTNode = new VisualBSTNode({
           value: parseInt(params.val),
           whiteboard,
-          size
+          size: { w: 50 }
         });
         break;
       case "insert":
@@ -686,6 +726,18 @@ class Whiteboard {
       this.canvas,
       this.state.LinkedList
     );
+  }
+
+  drawGuides() {
+    const stroke = { color: "#DDD", width: 1 };
+    this.whiteboard
+      .line(600, 0, 600, 900)
+      .stroke(stroke)
+      .front();
+    this.whiteboard
+      .line(0, 450, 1200, 450)
+      .stroke(stroke)
+      .front();
   }
 
   clearWhiteboard() {

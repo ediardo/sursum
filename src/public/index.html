@@ -31,6 +31,12 @@
       #header .ops {
         font-size: 1.1rem;
       }
+      #whiteboard-container {
+        border: 10px solid #CCCCCC;
+        max-height: 900px;
+        min-width: 1200px;
+        width: 100%;
+      }
       #header .data-structures button {
         background-color: white;
         border: 0;
@@ -49,7 +55,9 @@
         min-width: 30px;
       }
       
-
+      .tree-node-edge {
+        z-index: -2;
+      }
       [contenteditable=true]:empty:before {
         content: attr(placeholder);
         display: block; /* For Firefox */
@@ -124,7 +132,7 @@
         </div>
       </div>
       <div id="whiteboard-container">
-        <svg version="1.1" baseProfile="full" width="1200" height="800" id="whiteboard">
+        <svg version="1.1" baseProfile="full" width="1200" height="900" id="whiteboard">
           </svg>
       </div>
       <div id="footer"></div>
