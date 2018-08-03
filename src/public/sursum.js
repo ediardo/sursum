@@ -120,7 +120,7 @@ class VisualBSTNode extends Node {
       } else {
         this.right.insert(value, level + 1);
       }
-    } else {
+    } else if (value < this.value) {
       if (this.left === null) {
         level++;
         let newColumn;
@@ -143,7 +143,10 @@ class VisualBSTNode extends Node {
       } else {
         this.left.insert(value, level + 1);
       }
+    } else {
+      return false;
     }
+    return true;
   }
 
   contains(value, level) {
@@ -165,6 +168,39 @@ class VisualBSTNode extends Node {
   }
 
   getAncestors(rootNode, target) {
+    let ancestors = [];
+    if (rootNode === null) {
+      return;
+    }
+
+    while (true) {
+      while (rootNode !== null && rootNode.value !== target) {
+        ancestors.push(rootNode);
+        rootNode = rootNode.left;
+      }
+
+      if (rootNode !== null && rootNode.value === target) {
+        break;
+      }
+    }
+    /*
+    if (target < rootNode.value) {
+      let stack = [];
+      let currentNode = rootNode.left;
+      stack.push(currentNode);
+      while (currentNode !== null) {
+        stack.pop();
+        
+      }
+    } else if (target > rootNode.value) {
+    }
+    */
+    return ancestors
+      .reverse()
+      .map(a => a.value)
+      .join(", ");
+  }
+  _getAncestors(rootNode, target, ancestors = []) {
     if (rootNode === null) {
       return false;
     }
@@ -174,11 +210,11 @@ class VisualBSTNode extends Node {
     }
 
     if (
-      this.getAncestors(rootNode.left, target) ||
-      this.getAncestors(rootNode.right, target)
+      this._getAncestors(rootNode.left, target, ancestors) ||
+      this.getAncestors(rootNode.right, target, ancestors)
     ) {
-      console.log(rootNode.value);
-      return true;
+      ancestors.push(this.value);
+      return ancestors;
     }
     return false;
   }
@@ -195,7 +231,13 @@ class VisualBSTNode extends Node {
         "data-node-value": this.value.toString()
       })
       .addClass("tree-node");
-    datum.text(this.value.toString()).center(w / 2, w / 2);
+    datum
+      .text(this.value.toString())
+      .font({
+        family: "Patrick Hand",
+        size: 30
+      })
+      .center(w / 2, w / 2);
   }
   _rightChildSVG(wrapper) {
     const { w, h } = this._size;
@@ -321,10 +363,13 @@ class VisualListNode extends ListNode {
       stroke: "#333",
       "stroke-width": 1
     });
-    datum.text(this.value.toString()).attr({
-      width: w,
-      height: h
-    });
+    datum
+      .text(this.value.toString())
+      .attr({
+        width: w,
+        height: h
+      })
+      .font({});
   }
 
   nextSVG(wrapper) {
@@ -623,7 +668,11 @@ class Whiteboard {
   constructor(state) {
     this.setupListeners();
     this.whiteboard = SVG("whiteboard");
+    this.width = this.whiteboard.width();
+    this.height = this.whiteboard.height();
     this.nodeSize = { w: 70, h: 50 };
+    this.drawEffects();
+    this.drawOutputConsole();
     this.drawGuides();
   }
 
@@ -703,13 +752,14 @@ class Whiteboard {
         this.visualBSTNode.insert(parseInt(params.val));
         break;
       case "contains":
-        this.visualBSTNode.VisualBSTNode(params.val);
+        this.visualBSTNode.contains(parseInt(params.val));
         break;
       case "getAncestors":
-        this.visualBSTNode.getAncestors(
+        let ancestors = this.visualBSTNode.getAncestors(
           this.visualBSTNode,
           parseInt(params.val)
         );
+        this.appendToConsole(ancestors);
         break;
       default:
         console.log("Unknown operation");
@@ -751,15 +801,77 @@ class Whiteboard {
     );
   }
 
+  drawEffects() {
+    const { width, height } = this;
+    const nested = this.whiteboard.group();
+
+    let radialGradient = nested
+      .gradient("radial", stop => {
+        stop.at({ offset: 0.1, color: "#fefefe", opacity: 1 });
+        stop.at({ offset: 0.9, color: "#EAeaea", opacity: 1 });
+      })
+      .radius(0.9);
+    /*
+    let pattern = nested.pattern(20, 20, (add => {
+
+    });
+        */
+    nested.rect(width, height).fill(radialGradient);
+  }
+
   drawGuides() {
+    const { width, height } = this;
     const nested = this.whiteboard.nested();
     const stroke = { color: "#DDD", width: 1 };
-    nested.line(600, 0, 600, 700).stroke(stroke);
-    nested.line(0, 350, 1200, 350).stroke(stroke);
+    // Vertical line
+    nested.line(width / 2, 0, width / 2, height).stroke(stroke);
+    // Horizontal line
+    nested.line(0, height / 2, width, height / 2).stroke(stroke);
     nested.addClass("guides");
     nested.front();
   }
 
+  drawOutputConsole() {
+    const { width, height } = this;
+    const outerConsoleWrapper = { w: width - 50, h: height * 0.15 };
+    const innerConsoleWrapper = {
+      w: outerConsoleWrapper.w - 50,
+      h: outerConsoleWrapper.h - 35
+    };
+    const group = this.whiteboard.group();
+    group
+      .rect(outerConsoleWrapper.w, outerConsoleWrapper.h)
+      .fill({ color: "#FFF", opacity: 0.6 })
+      .radius(10)
+      .move(0 + 25, height * 0.8);
+    group
+      .text("Output")
+      .font({
+        size: 18
+      })
+      .move(0 + 25, height * 0.8);
+    group
+      .nested()
+      .width(innerConsoleWrapper.w)
+      .height(innerConsoleWrapper.h)
+      .attr({ id: "innerConsoleWrapper" })
+      .move(0 + 25, height * 0.8 + 20);
+  }
+
+  appendToConsole(text) {
+    this.clearConsole();
+    const consoleWrapper = SVG.get("innerConsoleWrapper");
+    console.log(text);
+    consoleWrapper.text(text);
+  }
+
+  clearConsole() {
+    const consoleWrapper = SVG.get("innerConsoleWrapper");
+    const text = consoleWrapper.first();
+    if (text) {
+      text.clear();
+    }
+  }
   clearWhiteboard() {
     this.whiteboard.clear();
   }

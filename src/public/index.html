@@ -5,6 +5,8 @@
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.6.5/svg.min.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Patrick+Hand" rel="stylesheet">
+
     <script src="sursum.js" type="text/babel"></script>
     <style>
       html, body {
@@ -31,8 +33,12 @@
       #header .ops {
         font-size: 1.1rem;
       }
+      svg#whiteboard { 
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f1f1f1', endColorstr='#e0e0e0',GradientType=1 ); /* ie6-9 */
+
+      }
       #whiteboard-container {
-        border: 10px solid #BBB;
+        border: 5px solid #aaa;
         box-sizing: content-box;
         height: 700px;
         
@@ -110,27 +116,36 @@
           </ul>
           <ul class="ops-lists">
             <li data-has-input="true" data-structure="bstNode" data-op-name="new">
-              new BinaryTreeNode(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val"></span>)
+              new BinaryTreeNode(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val" data-max-length="3"></span>)
               <button type="button" name="return">↵</button>
             </li>
             <li data-has-input="true" data-structure="bstNode" data-op-name="insert">
-              insert(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val"></span>)
+              insert(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val"  data-max-length="3"></span>)
               <button type="button" name="return">↵</button>
             </li>
             <li data-has-input="true" data-structure="bstNode" data-op-name="contains">
-              contains(<span contenteditable="true" placeholder="val" class="input" data-param-name="val"></span>)
+              contains(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
               <button type="button" name="return">↵</button>
             </li>
+
             <li data-has-input="true" data-structure="bstNode" data-op-name="getAncestors">
-                getAncestors(<span contenteditable="true" placeholder="val" class="input" data-param-name="val"></span>)
-                <button type="button" name="return">↵</button>
-              </li>
+              getAncestors(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="false" data-structure="bstNode" data-op-name="invert">
+              invert()
+              <button type="button" name="return">↵</button>
+            </li>
             <li data-has-input="false" data-structure="bstNode" data-op-name="preorderTraversal">
-                breadthFirstSearch()
-                <button type="button" name="return">↵</button>
-              </li>
+              preorderTraversal()
+              <button type="button" name="return">↵</button>
+            </li>
             <li data-has-input="false" data-structure="bstNode" data-op-name="inorderTraversal">
-              depthFirstSearch()
+              inorderTraversal()
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="false" data-structure="bstNode" data-op-name="postorderTraversal">
+              postorderTraversal()
               <button type="button" name="return">↵</button>
             </li>
           </ul>
@@ -152,7 +167,7 @@
         </div>
       </div>
       <div id="whiteboard-container">
-        <svg version="1.1" baseProfile="full" width="1200" height="900" id="whiteboard">
+        <svg version="1.1" baseProfile="full" width="1200" height="700" id="whiteboard">
           </svg>
       </div>
       <div id="footer"></div>
