@@ -32,10 +32,11 @@
         font-size: 1.1rem;
       }
       #whiteboard-container {
-        border: 10px solid #CCCCCC;
-        max-height: 900px;
-        min-width: 1200px;
-        width: 100%;
+        border: 10px solid #BBB;
+        box-sizing: content-box;
+        height: 700px;
+        
+        width: 1200px;
       }
       #header .data-structures button {
         background-color: white;
@@ -55,8 +56,8 @@
         min-width: 30px;
       }
       
-      .tree-node-edge {
-        z-index: -2;
+      .tree-node:hover {
+        fill: yellow;
       }
       [contenteditable=true]:empty:before {
         content: attr(placeholder);

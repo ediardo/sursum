@@ -224,7 +224,7 @@ class VisualBSTNode extends Node {
     let coords = {};
     const { w, h } = this._size;
     coords.x = (1200 / 32) * column;
-    coords.y = (900 / 6) * level;
+    coords.y = (700 / 6) * level;
 
     return coords;
   }
@@ -690,10 +690,12 @@ class Whiteboard {
     const { nodeSize: size, whiteboard } = this;
     switch (op) {
       case "new":
-        this.clearWhiteboard();
+        // this.clearWhiteboard();
+        const wrapper = this.whiteboard.group();
+        // wrapper.before();
         this.visualBSTNode = new VisualBSTNode({
           value: parseInt(params.val),
-          whiteboard,
+          whiteboard: wrapper,
           size: { w: 50 }
         });
         break;
@@ -750,15 +752,12 @@ class Whiteboard {
   }
 
   drawGuides() {
+    const nested = this.whiteboard.nested();
     const stroke = { color: "#DDD", width: 1 };
-    this.whiteboard
-      .line(600, 0, 600, 900)
-      .stroke(stroke)
-      .front();
-    this.whiteboard
-      .line(0, 450, 1200, 450)
-      .stroke(stroke)
-      .front();
+    nested.line(600, 0, 600, 700).stroke(stroke);
+    nested.line(0, 350, 1200, 350).stroke(stroke);
+    nested.addClass("guides");
+    nested.front();
   }
 
   clearWhiteboard() {
