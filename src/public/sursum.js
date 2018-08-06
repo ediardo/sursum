@@ -92,11 +92,6 @@ class VisualBSTNode extends Node {
   }
 
   insert(value, level = 0) {
-    console.log(
-      `Current node ${this.value} with left child ${
-        this.left
-      } and right child ${this.right}`
-    );
     if (value > this.value) {
       if (this.right === null) {
         level++;
@@ -182,24 +177,44 @@ class VisualBSTNode extends Node {
       if (rootNode !== null && rootNode.value === target) {
         break;
       }
-    }
-    /*
-    if (target < rootNode.value) {
-      let stack = [];
-      let currentNode = rootNode.left;
-      stack.push(currentNode);
-      while (currentNode !== null) {
-        stack.pop();
-        
+
+      // If no right sub trees, then go UP
+      if (ancestors[ancestors.length - 1].right === null) {
+        rootNode = ancestors.pop();
+        // if no right sub trees in right sub tree, then go UP again
+        while (
+          ancestors.length > 0 &&
+          ancestors[ancestors.length - 1].right === rootNode
+        ) {
+          rootNode = ancestors.pop();
+        }
       }
-    } else if (target > rootNode.value) {
+      // Visit node to the right
+      rootNode =
+        ancestors.length === 0 ? null : ancestors[ancestors.length - 1].right;
     }
-    */
+    // Simulate stack structure by reversing array
     return ancestors
       .reverse()
       .map(a => a.value)
       .join(", ");
   }
+
+  static preorderTraversal(rootNode) {
+    let nodes = [];
+    nodes.push(rootNode.value);
+    while (nodes.length > 0) {
+      nodes.pop();
+    }
+  }
+
+  static inorderTraversal(rootNode) {}
+
+  static postorderTraversal(rootNode) {}
+  _highlightNode(nodeId) {
+    let node = SVG.get(nodeId);
+  }
+
   _getAncestors(rootNode, target, ancestors = []) {
     if (rootNode === null) {
       return false;
@@ -225,20 +240,15 @@ class VisualBSTNode extends Node {
     datum
       .circle(w)
       .attr({
-        fill: "#FFF",
-        stroke: "#333",
-        "stroke-width": 2,
         "data-node-value": this.value.toString()
       })
-      .addClass("tree-node");
+      .addClass("tree-node-datum");
     datum
       .text(this.value.toString())
-      .font({
-        family: "Patrick Hand",
-        size: 30
-      })
+      .addClass("tree-node-value")
       .center(w / 2, w / 2);
   }
+
   _rightChildSVG(wrapper) {
     const { w, h } = this._size;
     let rightChild = wrapper.group();
@@ -311,7 +321,6 @@ class VisualBSTNode extends Node {
     }
     let childCoords = this._calculateColumnCoords(column, level);
     let parentColumnOffset = this._calculateColumnOffset(column, level);
-
     let parentCoords = this._calculateColumnCoords(
       column + parentColumnOffset,
       level - 1
@@ -323,10 +332,10 @@ class VisualBSTNode extends Node {
         parentCoords.x,
         parentCoords.y + this._size.w
       )
-      .stroke({ width: 1 })
       .back()
       .addClass("tree-node-edge");
   }
+
   _drawNode() {
     const { w, h } = this._size;
     const { _level, _column } = this;
@@ -339,94 +348,80 @@ class VisualBSTNode extends Node {
     let coords = this._calculateColumnCoords(_column, _level);
     //nodeFig.attr({ ...coords, cx: 25, yx: 25 });
     nodeFig.center(coords.x - w / 2, coords.y + 25);
+    nodeFig.addClass("tree-node");
     //nodeFig.dx(-w);
   }
 }
 
 class VisualListNode extends ListNode {
-  constructor(value, whiteboard, x, y, w = 100, h = 50) {
+  constructor({
+    value,
+    whiteboard,
+    size = { w: 100, h: 50 },
+    pos = { x: 0, y: 0 }
+  }) {
     super(value);
-    this.h = h;
-    this.w = w;
-    this.x = x;
-    this.y = y;
-    this.whiteboard = whiteboard;
-
-    this.drawNode();
+    this._size = size;
+    this._pos = pos;
+    this._whiteboard = whiteboard;
+    this._drawNode();
   }
 
-  datumSVG(wrapper) {
-    const { w, h } = this;
+  _datumSVG(wrapper) {
+    const { w, h } = this._size;
     let datum = wrapper.group();
-    datum.rect(w * 0.8, h).attr({
-      fill: "#FFF",
-      stroke: "#333",
-      "stroke-width": 1
-    });
+    datum.rect(w * 0.8, h).addClass("list-node-datum");
     datum
       .text(this.value.toString())
-      .attr({
-        width: w,
-        height: h
-      })
-      .font({});
+      .center((w * 0.8) / 2, h / 2)
+      .addClass("list-node-value");
   }
 
-  nextSVG(wrapper) {
-    const w = this.w * 0.2,
-      h = this.h;
-    const pointerAttr = {
-      fill: "#FFF",
-      stroke: "#333",
-      "stroke-width": 1
-    };
+  _nextSVG(wrapper) {
+    const w = this._size.w * 0.2,
+      h = this._size.h;
     const pointerCircleRadius = w / 3;
-    const pointerCircleAttr = {
-      fill: "#333"
-    };
     let pointer = wrapper.group();
     pointer
       .rect(w, h)
-      .attr(pointerAttr)
-      .move(this.w * 0.8, 0);
+      .addClass("list-node-next")
+      .move(this._size.w * 0.8, 0);
     pointer
       .circle(pointerCircleRadius)
-      .attr(pointerCircleAttr)
-      .center(this.w - w / 2, this.h / 2);
+      .addClass("list-node-link")
+      .center(this._size.w - w / 2, this._size.h / 2);
 
     let linkPoints = [
-      [this.w - w / 2, this.h / 2],
-      [this.w - w / 2 + 25, this.h / 2],
-      [this.w - w / 2 + 20, this.h / 2 - 5],
-      [this.w - w / 2 + 25, this.h / 2],
-      [this.w - w / 2 + 20, this.h / 2 + 5]
+      [this._size.w * 0.9, this._size.h / 2],
+      [this._size.w * 0.9 + 25, this._size.h / 2],
+      [this._size.w * 0.9 + 15, this._size.h / 2 - 5],
+      [this._size.w * 0.9 + 25, this._size.h / 2],
+      [this._size.w * 0.9 + 15, this._size.h / 2 + 5],
+      [this._size.w * 0.9 + 25, this._size.h / 2]
     ];
-    pointer
-      .polyline(linkPoints)
-      .fill("none")
-      .stroke({
-        width: 2
-      });
+    pointer.polyline(linkPoints).addClass("list-node-link");
   }
 
-  drawNode() {
-    const { x, y, w, h } = this;
-    let nodeFig = this.whiteboard.nested();
+  _drawNode() {
+    const { h, w } = this._size,
+      { x, y } = this._pos;
+    let nodeFig = this._whiteboard.nested();
+    this._datumSVG(nodeFig);
+    this._nextSVG(nodeFig);
     nodeFig.attr({ x, y });
-    this.datumSVG(nodeFig);
-    this.nextSVG(nodeFig);
-    this.id = nodeFig.id();
-    console.log(x, y, w, h, this.id);
+    nodeFig.addClass("list-node");
+    this._id = nodeFig.id();
   }
 }
 
 class VisualLinkedLIst {
   constructor(whiteboard) {
-    this.whiteboard = whiteboard;
+    this._whiteboard = whiteboard;
     this.head = null;
-    this.nodeSize = { w: 80, h: 50 };
-    this.nodeOffset = this.nodeSize.w * 1.2;
-    this.drawHead();
+    this._nodeSize = { w: 100, h: 40 };
+    this._nodeOffset = this._nodeSize.w * 0.2;
+    this._animationDuration = 250;
+    this._drawHead();
   }
 
   get length() {
@@ -441,78 +436,107 @@ class VisualLinkedLIst {
     return length;
   }
 
-  animateOffsetTail(tail, direction = "positive") {
+  _animateOffsetTail(tail, direction = "positive") {
     let current = tail;
+    // because we want to move the old head to 2nd position
+    let i = 1;
     while (current !== null) {
-      let node = SVG(current.id);
+      let node = SVG(current._id);
       if (direction === "positive") {
-        node.animate("200").attr({ x: node.attr("x") + this.nodeOffset });
+        node
+          .animate(this._animationDuration)
+          .attr({ x: node.attr("x") + this._calculateOffset() });
       } else {
-        node.animate("200").attr({ x: node.attr("x") - this.nodeOffset });
+        node
+          .animate(this._animationDuration)
+          .attr({ x: node.attr("x") - this._calculateOffset(i) });
       }
+      i++;
       current = current.next;
     }
   }
 
-  animateDeleteNode(node) {
-    let nodeElement = SVG(node.id);
-    nodeElement.animate().opacity(0);
-    nodeElement.remove();
+  _animateDeleteNode(node) {
+    let nodeElement = SVG(node._id);
+    nodeElement
+      .animate(this._animationDuration)
+      .attr({ y: nodeElement.attr("y") + 50, opacity: 0 });
+    window.setTimeout(() => {
+      nodeElement.remove();
+    }, this._animationDuration);
   }
 
   // adds a node at the end of list
   append(value) {
+    let i = 1;
     // if list is empty
     if (this.head === null) {
-      this.head = new VisualListNode(
+      let coords = this._calculateCoords(i);
+      this.head = new VisualListNode({
         value,
-        this.whiteboard,
-        0,
-        100,
-        this.nodeSize.w,
-        this.nodeSize.h
-      );
+        whiteboard: this._whiteboard,
+        pos: coords,
+        size: this._nodeSize
+      });
       return;
     }
     let current = this.head;
-    let i = 1;
     // repeat while not at the end of the list
     while (current.next !== null) {
       // get to the next element
       current = current.next;
       i++;
     }
-    current.next = new VisualListNode(
+    let coords = this._calculateCoords(i + 1);
+    current.next = new VisualListNode({
       value,
-      this.whiteboard,
-      this.nodeSize.w * 1.3 * i,
-      100,
-      this.nodeSize.w,
-      this.nodeSize.h
-    );
+      whiteboard: this._whiteboard,
+      pos: coords,
+      size: this._nodeSize
+    });
     console.log(this.toString());
   }
 
-  drawHead() {
-    this.whiteboard.text("head").font({
-      family: "Ubuntu Mono",
-      size: 24
-    });
-    let lineLength = 55;
-    this.whiteboard.line(20, 40, 20, 40 + lineLength).stroke({ width: 1 });
+  _drawHead(pos = 1) {
+    let head = SVG.get("linked-list-head");
+    let [x, y] = Object.values(this._calculateCoords(pos));
+    if (head !== null) {
+      head.center(x, y);
+    } else {
+      let head = this._whiteboard.nested();
+      head.text("head").addClass("head");
+      head.line(x + 5, 25, x + 5, 90).addClass("list-node-link");
+      head.attr({ id: "linked-list-head" });
+      head.center(x / 2, y - 90);
+    }
+  }
+
+  _calculateOffset() {
+    return this._nodeSize.w + this._nodeOffset;
+  }
+
+  _calculateCoords(pos = 1) {
+    let { _nodeOffset, _nodeSize } = this;
+    if (pos > 1) {
+      _nodeOffset = _nodeOffset * pos;
+    }
+    const coords = {
+      x: (pos - 1) * _nodeSize.w + _nodeOffset,
+      y: this._whiteboard.height() / 3
+    };
+    console.log(coords);
+    return coords;
   }
 
   // adds a node at the beggining of the list
   prepend(value) {
-    let newHead = new VisualListNode(
+    let newHead = new VisualListNode({
       value,
-      this.whiteboard,
-      0,
-      100,
-      this.nodeSize.w,
-      this.nodeSize.h
-    );
-    this.animateOffsetTail(this.head);
+      whiteboard: this._whiteboard,
+      size: this._nodeSize,
+      pos: this._calculateCoords(1)
+    });
+    this._animateOffsetTail(this.head);
     newHead.next = this.head;
     this.head = newHead;
     this.toString();
@@ -525,19 +549,17 @@ class VisualLinkedLIst {
     }
     let slow = this.head;
     let fast = slow.next;
-    let i = 1;
+    let i = 2;
     while (slow !== null) {
-      if (pos === i + 1) {
-        let newNode = new VisualListNode(
+      if (pos === i) {
+        let newNode = new VisualListNode({
           value,
-          this.whiteboard,
-          i * this.nodeOffset,
-          100,
-          this.nodeSize.w,
-          this.nodeSize.h
-        );
+          whiteboard: this._whiteboard,
+          pos: this._calculateCoords(pos),
+          size: this._nodeSize
+        });
         newNode.next = fast;
-        this.animateOffsetTail(fast);
+        this._animateOffsetTail(fast);
         slow.next = newNode;
         this.toString();
         return true;
@@ -604,9 +626,9 @@ class VisualLinkedLIst {
   removeAtPosition(index) {
     if (this.head === null) return null;
     if (index === 1) {
-      this.animateDeleteNode(this.head);
+      this._animateDeleteNode(this.head);
       this.head = this.head.next;
-      this.animateOffsetTail(this.head, "negative");
+      this._animateOffsetTail(this.head, "negative");
       this.toString();
       return true;
     }
@@ -615,9 +637,9 @@ class VisualLinkedLIst {
     let i = 1;
     while (slow.next !== null) {
       if (i + 1 === index) {
-        this.animateDeleteNode(slow.next);
+        this._animateDeleteNode(slow.next);
         slow.next = fast.next;
-        this.animateOffsetTail(fast.next, "negative");
+        this._animateOffsetTail(fast.next, "negative");
         return true;
       } else {
         i++;
@@ -664,6 +686,35 @@ class VisualLinkedLIst {
   }
 }
 
+class Console {
+  constructor(wrapper) {
+    this.wrapper = document.getElementById(wrapper);
+    this.count = 0;
+    this.setup();
+  }
+
+  setup() {
+    let browserConsole = console.log;
+    let wrapper = this.wrapper;
+    console.log = function(message) {
+      let entry = document.createElement("div");
+      let entryNumber = document.createElement("span");
+      entryNumber.className = "console-entry-number";
+      let entryMsg = document.createElement("span");
+      entryMsg.textContent = message;
+      entry.append(entryNumber, entryMsg);
+      wrapper.append(entry);
+      wrapper.scrollTop = wrapper.scrollHeight;
+      browserConsole(message);
+    };
+  }
+
+  clear() {
+    this.wrapper.innerHTML = "";
+    this.count = 0;
+  }
+}
+
 class Whiteboard {
   constructor(state) {
     this.setupListeners();
@@ -672,7 +723,7 @@ class Whiteboard {
     this.height = this.whiteboard.height();
     this.nodeSize = { w: 70, h: 50 };
     this.drawEffects();
-    this.drawOutputConsole();
+    this.setupConsole();
     this.drawGuides();
   }
 
@@ -710,7 +761,6 @@ class Whiteboard {
   linkedListOps(op, params) {
     switch (op) {
       case "new":
-        this.clearWhiteboard();
         this.visualLinkedList = new VisualLinkedLIst(this.whiteboard);
         break;
       case "append":
@@ -739,7 +789,7 @@ class Whiteboard {
     const { nodeSize: size, whiteboard } = this;
     switch (op) {
       case "new":
-        // this.clearWhiteboard();
+        //this.clearWhiteboard();
         const wrapper = this.whiteboard.group();
         // wrapper.before();
         this.visualBSTNode = new VisualBSTNode({
@@ -752,14 +802,19 @@ class Whiteboard {
         this.visualBSTNode.insert(parseInt(params.val));
         break;
       case "contains":
-        this.visualBSTNode.contains(parseInt(params.val));
+        let contains = this.visualBSTNode.contains(parseInt(params.val));
+        if (contains) {
+          console.log(`The BST does contain the node ${params.val}`);
+        } else {
+          console.log(`The BST does NOT contain the node ${params.val}`);
+        }
         break;
       case "getAncestors":
         let ancestors = this.visualBSTNode.getAncestors(
           this.visualBSTNode,
           parseInt(params.val)
         );
-        this.appendToConsole(ancestors);
+        console.log(`The ancestors of ${params.val} are ${ancestors}`);
         break;
       default:
         console.log("Unknown operation");
@@ -831,46 +886,20 @@ class Whiteboard {
     nested.front();
   }
 
-  drawOutputConsole() {
+  setupConsole() {
     const { width, height } = this;
-    const outerConsoleWrapper = { w: width - 50, h: height * 0.15 };
-    const innerConsoleWrapper = {
-      w: outerConsoleWrapper.w - 50,
-      h: outerConsoleWrapper.h - 35
-    };
-    const group = this.whiteboard.group();
-    group
-      .rect(outerConsoleWrapper.w, outerConsoleWrapper.h)
-      .fill({ color: "#FFF", opacity: 0.6 })
-      .radius(10)
-      .move(0 + 25, height * 0.8);
-    group
-      .text("Output")
-      .font({
-        size: 18
-      })
-      .move(0 + 25, height * 0.8);
-    group
-      .nested()
-      .width(innerConsoleWrapper.w)
-      .height(innerConsoleWrapper.h)
-      .attr({ id: "innerConsoleWrapper" })
-      .move(0 + 25, height * 0.8 + 20);
+    const consoleSize = { w: width - 40, h: height * 0.15 };
+    let consoleWrapper = this.whiteboard
+      .foreignObject(consoleSize.w, consoleSize.h)
+      .move(0 + 20, height * 0.85 - 20);
+    consoleWrapper.appendChild("div", { id: "whiteboardConsole" });
+    this.console = new Console("whiteboardConsole");
   }
 
-  appendToConsole(text) {
-    this.clearConsole();
-    const consoleWrapper = SVG.get("innerConsoleWrapper");
-    console.log(text);
-    consoleWrapper.text(text);
-  }
+  appendToConsole(text) {}
 
   clearConsole() {
-    const consoleWrapper = SVG.get("innerConsoleWrapper");
-    const text = consoleWrapper.first();
-    if (text) {
-      text.clear();
-    }
+    this.console.clear();
   }
   clearWhiteboard() {
     this.whiteboard.clear();

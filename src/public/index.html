@@ -3,7 +3,8 @@
     <title>Sursum Versus</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.6.5/svg.min.js"></script>
+    <script src="/svg.min.js"></script>
+    <script src="/svg.foreignobject.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Patrick+Hand" rel="stylesheet">
 
@@ -62,8 +63,43 @@
         min-width: 30px;
       }
       
-      .tree-node:hover {
+      div#whiteboardConsole {
+        background: rgba(200, 200, 200, 0.8);
+        border: 1px solid #AAA;
+        height: 100%;
+        overflow-y: scroll;
+      }
+      .tree-node-datum, .list-node-datum {
+        fill: #FFFFFF;
+        stroke: black;
+        stroke-width: 2px;
+      }
+      .list-node {
+        font-family: "Patrick Hand";
+        font-size: 22px;
+        opacity: 1;
+      }
+      .tree-node-value, .list-node-value {
+        font-family: "Patrick Hand";
+        font-size: 24px;
+        font-weight: bold;
+      }
+      .list-node-next { 
+        stroke: black;
+        stroke-width: 2px;
+        fill: #F0F0F0;
+      }
+      .head {
+        font-family: "Patrick Hand";
+        font-size: 26px;
+      }
+      .tree-node *:hover {
         fill: yellow;
+      }
+
+      .tree-node-edge, .list-node-link {
+        stroke: blue;
+        stroke-width: 3px;
       }
       [contenteditable=true]:empty:before {
         content: attr(placeholder);
@@ -94,15 +130,15 @@
               <button type="button" name="return">↵</button>
             </li>
             <li data-has-input="true" data-structure="linkedList" data-op-name="append">
-              append(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val" data-max-length="3"></span>)
+              append(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val" data-max-length="2"></span>)
               <button type="button" name="return">↵</button>
             </li>
             <li data-has-input="true" data-structure="linkedList" data-op-name="prepend">
-              prepend(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3" ></span>)
+              prepend(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2" ></span>)
               <button type="button" name="return">↵</button>
             </li>
             <li data-has-input="true" data-structure="linkedList" data-op-name="insertAtPos">
-              insertAtPos(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>,
+              insertAtPos(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>,
               <span contenteditable="true" placeholder="pos"  class="input" data-param-name="pos" data-max-length="2"></span>)
               <button type="button" name="return">↵</button>
             </li>
@@ -111,7 +147,7 @@
               <button type="button" name="return">↵</button>
             </li>
             <li data-has-input="true" data-structure="linkedLIst" data-op-name"findByValue">
-              findByValue(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
+              findByValue(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>)
             </li>
           </ul>
           <ul class="ops-lists">
@@ -181,9 +217,10 @@
       */
       const initialState = {};
       ((state) => {
-        var app = document.getElementById("app");  
-      
+        
+        var app = document.getElementById("app");
         let whiteboard = new Whiteboard(state);
+  
       })(initialState, );
 
     </script>
