@@ -162,7 +162,7 @@ class VisualBSTNode extends Node {
     }
   }
 
-  getAncestors(rootNode, target) {
+  static getAncestors(rootNode, target) {
     let ancestors = [];
     if (rootNode === null) {
       return;
@@ -201,18 +201,84 @@ class VisualBSTNode extends Node {
   }
 
   static preorderTraversal(rootNode) {
-    let nodes = [];
-    nodes.push(rootNode.value);
-    while (nodes.length > 0) {
-      nodes.pop();
+    if (rootNode === null) {
+      return;
     }
+    let stack = [];
+    stack.push(rootNode);
+    let asyncTraversal = new Promise((resolve, reject) => {
+      let previousNode = null;
+      let traversal = [];
+      let intervalId = setInterval(() => {
+        if (stack.length === 0) {
+          clearInterval(intervalId);
+          VisualBSTNode._unvisitNodeSVG(previousNode);
+          resolve(traversal);
+        } else {
+          let currentNode = stack.pop();
+          if (previousNode !== null) {
+            VisualBSTNode._unvisitNodeSVG(previousNode);
+          }
+          previousNode = currentNode;
+          VisualBSTNode._visitNodeSVG(currentNode);
+          traversal.push(currentNode.value);
+          if (currentNode.right !== null) {
+            stack.push(currentNode.right);
+          }
+          if (currentNode.left !== null) {
+            stack.push(currentNode.left);
+          }
+        }
+      }, 350);
+    });
+    return asyncTraversal;
   }
 
-  static inorderTraversal(rootNode) {}
+  static inorderTraversal(rootNode) {
+    if (rootNode === null) {
+      return;
+    }
+    let stack = [];
+    let currentNode = rootNode;
+
+    let asyncTraversal = new Promise((resolve, reject) => {
+      let previousNode = null;
+      let traversal = [];
+      let intervalId = setInterval(() => {
+        if (currentNode === null && stack.length === 0) {
+          clearInterval(intervalId);
+          VisualBSTNode._unvisitNodeSVG(previousNode);
+          resolve(traversal);
+        } else {
+          // Go as far as possible to the left
+          while (currentNode !== null) {
+            stack.push(currentNode);
+            currentNode = currentNode.left;
+          }
+          currentNode = stack.pop();
+          VisualBSTNode._visitNodeSVG(currentNode);
+          if (previousNode !== null) {
+            VisualBSTNode._unvisitNodeSVG(previousNode);
+          }
+          previousNode = currentNode;
+          traversal.push(currentNode.value);
+          currentNode = currentNode.right;
+        }
+      }, 350);
+    });
+
+    return asyncTraversal;
+  }
 
   static postorderTraversal(rootNode) {}
-  _highlightNode(nodeId) {
-    let node = SVG.get(nodeId);
+
+  static _visitNodeSVG(node) {
+    let nodeElement = document.querySelector(`#${node._id} circle`);
+    nodeElement.classList.add("current");
+  }
+  static _unvisitNodeSVG(node) {
+    let nodeElement = document.querySelector(`#${node._id} circle`);
+    nodeElement.classList.remove("current");
   }
 
   _getAncestors(rootNode, target, ancestors = []) {
@@ -722,7 +788,6 @@ class Whiteboard {
     this.width = this.whiteboard.width();
     this.height = this.whiteboard.height();
     this.nodeSize = { w: 70, h: 50 };
-    this.drawEffects();
     this.setupConsole();
     this.drawGuides();
   }
@@ -785,7 +850,7 @@ class Whiteboard {
     }
   }
 
-  bstOps(op, params) {
+  async bstOps(op, params) {
     const { nodeSize: size, whiteboard } = this;
     switch (op) {
       case "new":
@@ -810,11 +875,29 @@ class Whiteboard {
         }
         break;
       case "getAncestors":
-        let ancestors = this.visualBSTNode.getAncestors(
+        let ancestors = VisualBSTNode.getAncestors(
           this.visualBSTNode,
           parseInt(params.val)
         );
         console.log(`The ancestors of ${params.val} are ${ancestors}`);
+        break;
+      case "preorderTraversal":
+        let preorderTraversal = await VisualBSTNode.preorderTraversal(
+          this.visualBSTNode
+        );
+        console.log(`The preorder traversal (NLR) is: ${preorderTraversal}`);
+        break;
+      case "inorderTraversal":
+        let inorderTraversal = await VisualBSTNode.inorderTraversal(
+          this.visualBSTNode
+        );
+        console.log(`The inorder traversal (LNR) is: ${inorderTraversal}`);
+        break;
+      case "postorderTraversal":
+        let postorderTraversal = await VisualBSTNode.inorderTraversal(
+          this.visualBSTNode
+        );
+        console.log(`The postorder traversal (LRN) is: ${postorderTraversal}`);
         break;
       default:
         console.log("Unknown operation");
@@ -887,12 +970,6 @@ class Whiteboard {
   }
 
   setupConsole() {
-    const { width, height } = this;
-    const consoleSize = { w: width - 40, h: height * 0.15 };
-    let consoleWrapper = this.whiteboard
-      .foreignObject(consoleSize.w, consoleSize.h)
-      .move(0 + 20, height * 0.85 - 20);
-    consoleWrapper.appendChild("div", { id: "whiteboardConsole" });
     this.console = new Console("whiteboardConsole");
   }
 

@@ -64,16 +64,23 @@
       }
       
       div#whiteboardConsole {
-        background: rgba(200, 200, 200, 0.8);
         border: 1px solid #AAA;
-        height: 100%;
-        overflow-y: scroll;
+        height: 50vh;
+        overflow-y: visible;
       }
       .tree-node-datum, .list-node-datum {
         fill: #FFFFFF;
         stroke: black;
         stroke-width: 2px;
+        transform: scale(1);
+        transition: all 0.2;
       }
+
+      .current {
+        fill: yellow;
+        transition: fill 0.3;
+      }
+
       .list-node {
         font-family: "Patrick Hand";
         font-size: 22px;
@@ -101,6 +108,7 @@
         stroke: blue;
         stroke-width: 3px;
       }
+
       [contenteditable=true]:empty:before {
         content: attr(placeholder);
         display: block; /* For Firefox */
@@ -110,105 +118,97 @@
   </head>
   <body>
     <div id="app" class="container-fluid">
-      <div id="header">
-        <!--
-        <div class="data-structures">
-          <ul>
-            <li>
-              <button type="button" name="lists" data-has-operations="true">linked list</button>
-            </li>
-            <li>
-              <button type="button" name="bst" data-has-operations="true">binary search tree</button>
-            </li>
-          </ul>
+      <div class="row justify-content-md-center">
+        <div id="sidebar"class="col col-4">
+          <div class="ops">
+            <ul class="ops-lists">
+                <li data-has-input="false" data-structure="linkedList" data-op-name="new">
+                  new LinkedList()
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="true" data-structure="linkedList" data-op-name="append">
+                  append(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val" data-max-length="2"></span>)
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="true" data-structure="linkedList" data-op-name="prepend">
+                  prepend(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2" ></span>)
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="true" data-structure="linkedList" data-op-name="insertAtPos">
+                  insertAtPos(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>,
+                  <span contenteditable="true" placeholder="pos"  class="input" data-param-name="pos" data-max-length="2"></span>)
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="true" data-structure="linkedList" data-op-name="removeAtPos">
+                  removeAtPos(<span contenteditable="true"  placeholder="pos" class="input"  data-param-name="pos" data-max-length="2"></span>)
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="true" data-structure="linkedLIst" data-op-name"findByValue">
+                  findByValue(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>)
+                </li>
+            </ul>
+            <ul class="ops-bst">
+                <li data-has-input="true" data-structure="bstNode" data-op-name="new">
+                  new BinaryTreeNode(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val" data-max-length="3"></span>)
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="true" data-structure="bstNode" data-op-name="insert">
+                  insert(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val"  data-max-length="3"></span>)
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="true" data-structure="bstNode" data-op-name="contains">
+                  contains(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
+                  <button type="button" name="return">↵</button>
+                </li>
+  
+                <li data-has-input="true" data-structure="bstNode" data-op-name="getAncestors">
+                  getAncestors(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="false" data-structure="bstNode" data-op-name="invert">
+                  invert()
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="false" data-structure="bstNode" data-op-name="preorderTraversal">
+                  preorderTraversal()
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="false" data-structure="bstNode" data-op-name="inorderTraversal">
+                  inorderTraversal()
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="false" data-structure="bstNode" data-op-name="postorderTraversal">
+                  postorderTraversal()
+                  <button type="button" name="return">↵</button>
+                </li>
+            </ul>
+            <ul class="ops-arrays">
+                <li data-has-input="true" data-structure="array" data-op-name="new">
+                  new Array(<span contenteditable="true" placeholder="val" class="input"  data-param-name="length"></span>)
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="true" data-structure="array" data-op-name="push">
+                  push(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val"></span>)
+                  <button type="button" name="return">↵</button>
+                </li>
+                <li data-has-input="true" data-structure="array" data-op-name="sort">
+                  sort(<span contenteditable="true" placeholder="asc" class="input" data-param-name="direction"></span>, <span contenteditable="true" placeholder="algo" class="input" data-param-name="algo"></span>)
+                  <button type="button" name="return">↵</button>
+                </li>
+                
+            </ul>          
+          </div>
+          <div id="whiteboardConsole"></div>
         </div>
-      -->
-        <div class="ops">
-          <ul class="ops-lists">
-            <li data-has-input="false" data-structure="linkedList" data-op-name="new">
-              new LinkedList()
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="true" data-structure="linkedList" data-op-name="append">
-              append(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val" data-max-length="2"></span>)
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="true" data-structure="linkedList" data-op-name="prepend">
-              prepend(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2" ></span>)
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="true" data-structure="linkedList" data-op-name="insertAtPos">
-              insertAtPos(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>,
-              <span contenteditable="true" placeholder="pos"  class="input" data-param-name="pos" data-max-length="2"></span>)
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="true" data-structure="linkedList" data-op-name="removeAtPos">
-              removeAtPos(<span contenteditable="true"  placeholder="pos" class="input"  data-param-name="pos" data-max-length="2"></span>)
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="true" data-structure="linkedLIst" data-op-name"findByValue">
-              findByValue(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>)
-            </li>
-          </ul>
-          <ul class="ops-lists">
-            <li data-has-input="true" data-structure="bstNode" data-op-name="new">
-              new BinaryTreeNode(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val" data-max-length="3"></span>)
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="true" data-structure="bstNode" data-op-name="insert">
-              insert(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val"  data-max-length="3"></span>)
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="true" data-structure="bstNode" data-op-name="contains">
-              contains(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
-              <button type="button" name="return">↵</button>
-            </li>
-
-            <li data-has-input="true" data-structure="bstNode" data-op-name="getAncestors">
-              getAncestors(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="false" data-structure="bstNode" data-op-name="invert">
-              invert()
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="false" data-structure="bstNode" data-op-name="preorderTraversal">
-              preorderTraversal()
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="false" data-structure="bstNode" data-op-name="inorderTraversal">
-              inorderTraversal()
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="false" data-structure="bstNode" data-op-name="postorderTraversal">
-              postorderTraversal()
-              <button type="button" name="return">↵</button>
-            </li>
-          </ul>
-          <ul class="ops-arrays">
-            <li data-has-input="true" data-structure="array" data-op-name="new">
-              new Array(<span contenteditable="true" placeholder="val" class="input"  data-param-name="length"></span>)
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="true" data-structure="array" data-op-name="push">
-              push(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val"></span>)
-              <button type="button" name="return">↵</button>
-            </li>
-            <li data-has-input="true" data-structure="array" data-op-name="sort">
-              sort(<span contenteditable="true" placeholder="asc" class="input" data-param-name="direction"></span>, <span contenteditable="true" placeholder="algo" class="input" data-param-name="algo"></span>)
-              <button type="button" name="return">↵</button>
-            </li>
-            
-          </ul>          
+        <div class="col col-8">
+          <div id="whiteboard-container">
+            <svg version="1.1" baseProfile="full" width="1200" height="700" id="whiteboard"></svg>
+          </div>
         </div>
       </div>
-      <div id="whiteboard-container">
-        <svg version="1.1" baseProfile="full" width="1200" height="700" id="whiteboard">
-          </svg>
-      </div>
-      <div id="footer"></div>
       
-
+    </div>
+      
     </div>
 
     <script type="text/babel">
