@@ -1,217 +1,256 @@
 <html>
-  <head>
-    <title>Sursum Versus</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <script src="/svg.min.js"></script>
-    <script src="/svg.foreignobject.js"></script>
-    <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Patrick+Hand" rel="stylesheet">
 
-    <script src="sursum.js" type="text/babel"></script>
-    <style>
-      html, body {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-      }
-      
-      ul {
-        margin: 0;
-        padding:0;
-      }
+<head>
+  <title>Sursum Versus</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B"
+    crossorigin="anonymous">
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script src="/svg.min.js"></script>
+  <script src="/svg.foreignobject.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Patrick+Hand" rel="stylesheet">
+  <script src="sursum.js" type="text/babel"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+    }
 
-      li {
-        list-style-type: none;
-        display: inline;
-      }
-      .data-structures, .ops { 
-        font-family: 'Ubuntu Mono', monospace;      
-      }
-      #header .data-structures {
-        font-size: 1.3rem;
-      }
-      #header .ops {
-        font-size: 1.1rem;
-      }
-      svg#whiteboard { 
-        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f1f1f1', endColorstr='#e0e0e0',GradientType=1 ); /* ie6-9 */
+    ul {
+      margin: 0;
+      padding: 0;
+    }
 
-      }
-      #whiteboard-container {
-        border: 5px solid #aaa;
-        box-sizing: content-box;
-        height: 700px;
-        
-        width: 1200px;
-      }
-      #header .data-structures button {
-        background-color: white;
-        border: 0;
-      }
-      
+    li {
+      list-style-type: none;
+      display: inline;
+    }
 
-      svg {
-        font-family: 'Ubuntu Mono', monospace;
-      }
-      #header .ops button {
-        border: 1px;
-      }
-      span.input {
-        background-color:yellow;
-        display: inline-block;
-        min-width: 30px;
-      }
-      
-      div#whiteboardConsole {
-        border: 1px solid #AAA;
-        height: 50vh;
-        overflow-y: visible;
-      }
-      .tree-node-datum, .list-node-datum {
-        fill: #FFFFFF;
-        stroke: black;
-        stroke-width: 2px;
-        transform: scale(1);
-        transition: all 0.2;
-      }
+    .data-structures,
+    .ops {
+      font-family: 'Ubuntu Mono', monospace;
+    }
 
-      .current {
-        fill: yellow;
-        transition: fill 0.3;
-      }
+    #header .data-structures {
+      font-size: 1.3rem;
+    }
 
-      .list-node {
-        font-family: "Patrick Hand";
-        font-size: 22px;
-        opacity: 1;
-      }
-      .tree-node-value, .list-node-value {
-        font-family: "Patrick Hand";
-        font-size: 24px;
-        font-weight: bold;
-      }
-      .list-node-next { 
-        stroke: black;
-        stroke-width: 2px;
-        fill: #F0F0F0;
-      }
-      .head {
-        font-family: "Patrick Hand";
-        font-size: 26px;
-      }
-      .tree-node *:hover {
-        fill: yellow;
-      }
+    #header .ops {
+      font-size: 1.1rem;
+    }
 
-      .tree-node-edge, .list-node-link {
-        stroke: blue;
-        stroke-width: 3px;
-      }
+    svg#whiteboard {
+      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f1f1f1', endColorstr='#e0e0e0', GradientType=1);
+      /* ie6-9 */
+    }
 
-      [contenteditable=true]:empty:before {
-        content: attr(placeholder);
-        display: block; /* For Firefox */
-        font-style:italic;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="app" class="container-fluid">
-      <div class="row justify-content-md-center">
-        <div id="sidebar"class="col col-4">
-          <div class="ops">
-            <ul class="ops-lists">
-                <li data-has-input="false" data-structure="linkedList" data-op-name="new">
-                  new LinkedList()
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="true" data-structure="linkedList" data-op-name="append">
-                  append(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val" data-max-length="2"></span>)
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="true" data-structure="linkedList" data-op-name="prepend">
-                  prepend(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2" ></span>)
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="true" data-structure="linkedList" data-op-name="insertAtPos">
-                  insertAtPos(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>,
-                  <span contenteditable="true" placeholder="pos"  class="input" data-param-name="pos" data-max-length="2"></span>)
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="true" data-structure="linkedList" data-op-name="removeAtPos">
-                  removeAtPos(<span contenteditable="true"  placeholder="pos" class="input"  data-param-name="pos" data-max-length="2"></span>)
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="true" data-structure="linkedLIst" data-op-name"findByValue">
-                  findByValue(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>)
-                </li>
-            </ul>
-            <ul class="ops-bst">
-                <li data-has-input="true" data-structure="bstNode" data-op-name="new">
-                  new BinaryTreeNode(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val" data-max-length="3"></span>)
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="true" data-structure="bstNode" data-op-name="insert">
-                  insert(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val"  data-max-length="3"></span>)
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="true" data-structure="bstNode" data-op-name="contains">
-                  contains(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
-                  <button type="button" name="return">↵</button>
-                </li>
-  
-                <li data-has-input="true" data-structure="bstNode" data-op-name="getAncestors">
-                  getAncestors(<span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="false" data-structure="bstNode" data-op-name="invert">
-                  invert()
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="false" data-structure="bstNode" data-op-name="preorderTraversal">
-                  preorderTraversal()
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="false" data-structure="bstNode" data-op-name="inorderTraversal">
-                  inorderTraversal()
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="false" data-structure="bstNode" data-op-name="postorderTraversal">
-                  postorderTraversal()
-                  <button type="button" name="return">↵</button>
-                </li>
-            </ul>
-            <ul class="ops-arrays">
-                <li data-has-input="true" data-structure="array" data-op-name="new">
-                  new Array(<span contenteditable="true" placeholder="val" class="input"  data-param-name="length"></span>)
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="true" data-structure="array" data-op-name="push">
-                  push(<span contenteditable="true" placeholder="val" class="input"  data-param-name="val"></span>)
-                  <button type="button" name="return">↵</button>
-                </li>
-                <li data-has-input="true" data-structure="array" data-op-name="sort">
-                  sort(<span contenteditable="true" placeholder="asc" class="input" data-param-name="direction"></span>, <span contenteditable="true" placeholder="algo" class="input" data-param-name="algo"></span>)
-                  <button type="button" name="return">↵</button>
-                </li>
-                
-            </ul>          
-          </div>
-          <div id="whiteboardConsole"></div>
+    #whiteboard-container {
+      border: 5px solid #aaa;
+      box-sizing: content-box;
+      height: 700px;
+
+      width: 1200px;
+    }
+
+    #header .data-structures button {
+      background-color: white;
+      border: 0;
+    }
+
+
+    svg {
+      font-family: 'Ubuntu Mono', monospace;
+    }
+
+    #header .ops button {
+      border: 1px;
+    }
+
+    span.input {
+      background-color: yellow;
+      display: inline-block;
+      min-width: 30px;
+    }
+
+    div#whiteboardConsole {
+      border: 1px solid #AAA;
+      height: 50vh;
+      overflow-y: visible;
+    }
+
+    .tree-node-datum,
+    .list-node-datum {
+      fill: #FFFFFF;
+      stroke: black;
+      stroke-width: 2px;
+      transform: scale(1);
+      transition: all 0.2;
+    }
+
+    .current {
+      fill: yellow;
+      transition: fill 0.3;
+    }
+
+    .list-node {
+      font-family: "Patrick Hand";
+      font-size: 22px;
+      opacity: 1;
+    }
+
+    .tree-node-value,
+    .list-node-value {
+      font-family: "Patrick Hand";
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .list-node-next {
+      stroke: black;
+      stroke-width: 2px;
+      fill: #F0F0F0;
+    }
+
+    .head {
+      font-family: "Patrick Hand";
+      font-size: 26px;
+    }
+
+    .tree-node *:hover {
+      fill: yellow;
+    }
+
+    .tree-node-edge,
+    .list-node-link {
+      stroke: blue;
+      stroke-width: 3px;
+    }
+
+    [contenteditable=true]:empty:before {
+      content: attr(placeholder);
+      display: block;
+      /* For Firefox */
+      font-style: italic;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="container-fluid">
+    <div class="row justify-content-md-center">
+      <div id="sidebar" class="col col-4">
+        <div class="ops">
+          <ul class="ops-lists">
+            <li data-has-input="false" data-structure="linkedList" data-op-name="new">
+              new LinkedList()
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="linkedList" data-op-name="append">
+              append(
+              <span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="linkedList" data-op-name="prepend">
+              prepend(
+              <span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="linkedList" data-op-name="insertAtPos">
+              insertAtPos(
+              <span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>,
+              <span contenteditable="true" placeholder="pos" class="input" data-param-name="pos" data-max-length="2"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="linkedList" data-op-name="removeAtPos">
+              removeAtPos(
+              <span contenteditable="true" placeholder="pos" class="input" data-param-name="pos" data-max-length="2"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="linkedLIst" data-op-name "findByValue">
+              findByValue(
+              <span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="2"></span>)
+            </li>
+          </ul>
+          <ul class="ops-bst">
+            <li data-has-input="true" data-structure="bstNode" data-op-name="new">
+              new BinaryTreeNode(
+              <span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="bstNode" data-op-name="insert">
+              insert(
+              <span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="bstNode" data-op-name="contains">
+              contains(
+              <span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+
+            <li data-has-input="true" data-structure="bstNode" data-op-name="getAncestors">
+              getAncestors(
+              <span contenteditable="true" placeholder="val" class="input" data-param-name="val" data-max-length="3"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="false" data-structure="bstNode" data-op-name="invert">
+              invert()
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="false" data-structure="bstNode" data-op-name="preorderTraversal">
+              preorderTraversal()
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="false" data-structure="bstNode" data-op-name="inorderTraversal">
+              inorderTraversal()
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="false" data-structure="bstNode" data-op-name="postorderTraversal">
+              postorderTraversal()
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="false" data-structure="bstNode" data-op-name="levelorderTraversal">
+              levelorderTraversal()
+              <button type="button" name="return">↵</button>
+
+            </li>
+          </ul>
+          <ul class="ops-arrays">
+            <li data-has-input="true" data-structure="array" data-op-name="new">
+              new Array(
+              <span contenteditable="true" placeholder="val" class="input" data-param-name="length"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="array" data-op-name="push">
+              push(
+              <span contenteditable="true" placeholder="val" class="input" data-param-name="val"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+            <li data-has-input="true" data-structure="array" data-op-name="sort">
+              sort(
+              <span contenteditable="true" placeholder="asc" class="input" data-param-name="direction"></span>,
+              <span contenteditable="true" placeholder="algo" class="input" data-param-name="algo"></span>)
+              <button type="button" name="return">↵</button>
+            </li>
+
+          </ul>
         </div>
-        <div class="col col-8">
-          <div id="whiteboard-container">
-            <svg version="1.1" baseProfile="full" width="1200" height="700" id="whiteboard"></svg>
-          </div>
+        <div id="whiteboardConsole"></div>
+      </div>
+      <div class="col col-8">
+        <div id="whiteboard-container">
+          <svg version="1.1" baseProfile="full" width="1200" height="700" id="whiteboard"></svg>
         </div>
       </div>
-      
-    </div>
-      
     </div>
 
-    <script type="text/babel">
+  </div>
+
+  </div>
+
+  <script type="text/babel">
       /*
       * IIFE (immediately invoked function expression) 
       */
@@ -224,5 +263,6 @@
       })(initialState, );
 
     </script>
-  </body>
+</body>
+
 </html>

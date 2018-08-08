@@ -1,61 +1,3 @@
-/*
-       Utils
-      
-String.prototype.capitalize = function() {
-  return this.charAt(0).toUpperCase() + this.substr(1);
-};
-
-Array.prototype.toInt = function() {
-  return this.map(n => parseInt(n));
-};
-
-Array.prototype.generate = function(n, sorted = false) {
-  let arr = new Array();
-  if (sorted) {
-    for (let i = 1; i <= n; i++) {
-      arr.push(i);
-    }
-  } else {
-    for (let i = 1; i <= n; i++) {
-      arr.push(Math.floor(Math.random() * n));
-    }
-  }
-  console.log(arr);
-  return arr;
-};
-
-Array.prototype.swap = function(a, b) {
-  if (a === b) return this;
-  if (a >= this.length || b >= this.length) return -1;
-  let tmp = this[b];
-  this[b] = this[a];
-  this[a] = tmp;
-  return this;
-};
-
-Array.prototype.bubbleSort = function(direction = "asc") {
-  for (let i = 0; i < this.length - 1; i++) {
-    for (let j = 0; j < this.length - i - 1; j++) {
-      if (this[j] > this[j + 1]) {
-        this.swap(j, j + 1);
-      }
-    }
-  }
-  console.log(this);
-  return this;
-};
-
-Array.prototype.insertionSort = function(direction = "asc") {};
-
-Array.prototype.quickSort = function(direction = "asc") {};
-
-Array.prototype.mergeSort = function(direction = "asc") {};
-
-*/
-/*
- * DATA STRUCTURES
- * 
- */
 class Node {
   constructor(value = null) {
     this.value = value;
@@ -99,9 +41,6 @@ class SinglyLinkedList {
   }
 }
 
-class Queue {}
-
-class Stack {}
 class BinaryTreeNode extends Node {
   constructor(value, left, right) {
     super(value);
@@ -235,19 +174,19 @@ class VisualSinglyLinkedList extends SinglyLinkedList {
   }
 
   // adds a node at the end of list
-  static append(list, value) {
+  static append(head, value) {
     let i = 1;
     // if list is empty
-    if (list.head === null) {
+    if (head === null) {
       const coords = this._calculateCoords(i);
       return new VisualSinglyLinkedListNode({
         value,
-        whiteboard: list._whiteboard,
+        whiteboard: this._whiteboard,
         pos: coords,
-        size: list._nodeSize,
+        size: this._nodeSize,
       });
     }
-    let current = list.head;
+    let current = head;
     // repeat while not at the end of the list
     while (current.next !== null) {
       // get to the next element
@@ -257,18 +196,18 @@ class VisualSinglyLinkedList extends SinglyLinkedList {
     const coords = this._calculateCoords(i + 1);
     current.next = new VisualSinglyLinkedListNode({
       value,
-      whiteboard: list._whiteboard,
+      whiteboard: this._whiteboard,
       pos: coords,
-      size: list._nodeSize,
+      size: this._nodeSize,
     });
     // return new head
-    return list;
+    return head;
   }
 
   // finds a node at k position, returns null if not found
   static findAtPosition(head, index) {
     if (head === null) return null;
-    let current = head;
+    let current = this.head;
     let i = 1;
     while (current !== null) {
       if (index === i) {
@@ -304,9 +243,9 @@ class VisualSinglyLinkedList extends SinglyLinkedList {
       if (pos === i) {
         const newNode = new VisualSinglyLinkedListNode({
           value,
-          whiteboard: head._whiteboard,
+          whiteboard: this._whiteboard,
           pos: this._calculateCoords(pos),
-          size: head._nodeSize,
+          size: this._nodeSize,
         });
         newNode.next = fast;
         this._animateOffsetTail(fast);
@@ -455,7 +394,7 @@ class VisualSinglyLinkedList extends SinglyLinkedList {
     return this._nodeSize.w + this._nodeOffset;
   }
 
-  static _calculateCoords(pos = 1) {
+  _calculateCoords(pos = 1) {
     const { _nodeSize } = this;
     let { _nodeOffset } = this;
     if (pos > 1) {
@@ -486,7 +425,6 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
     this._pos = pos;
     this._level = level;
     this._column = column;
-    console.log(`Inserted new node ${value} at level ${level}`);
     this._drawNode();
   }
 
@@ -504,38 +442,36 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
         } else if (level === 4) {
           newColumn = rootNode._column + 1;
         }
-        const newNode = new VisualBinaryTreeNode({
+        rootNode.right = new VisualBinaryTreeNode({
           value,
-          whiteboard: rootNode._whiteboard,
-          size: rootNode._size,
+          whiteboard: this._whiteboard,
+          size: this._size,
           column: newColumn,
           level,
         });
-        rootNode.right = newNode;
       } else {
         VisualBinaryTreeNode.insert(rootNode.right, value, level + 1);
       }
-    } else if (value < rootNode.value) {
-      if (rootNode.left === null) {
+    } else if (value < this.value) {
+      if (this.left === null) {
         level += 1;
         let newColumn;
         if (level === 1) {
-          newColumn = rootNode._column - 8;
+          newColumn = this._column - 8;
         } else if (level === 2) {
-          newColumn = rootNode._column - 4;
+          newColumn = this._column - 4;
         } else if (level === 3) {
-          newColumn = rootNode._column - 2;
+          newColumn = this._column - 2;
         } else if (level === 4) {
-          newColumn = rootNode._column - 1;
+          newColumn = this._column - 1;
         }
-        const newNode = new VisualBinaryTreeNode({
+        rootNode.left = new VisualBinaryTreeNode({
           value,
-          whiteboard: rootNode._whiteboard,
-          size: rootNode._size,
+          whiteboard: this._whiteboard,
+          size: this._size,
           column: newColumn,
           level,
         });
-        rootNode.left = newNode;
       } else {
         VisualBinaryTreeNode.insert(rootNode.left, value, level + 1);
       }
@@ -545,20 +481,20 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
     return rootNode;
   }
 
-  static contains(rootNode, value) {
-    if (value === rootNode.value) {
+  static contains(value) {
+    if (value === this.value) {
       return true;
     }
-    if (value < rootNode.value) {
-      if (rootNode.left === null) {
+    if (value < this.value) {
+      if (this.left === null) {
         return false;
       }
-      return rootNode.left.contains(value);
+      return this.left.contains(value);
     }
-    if (rootNode.right === null) {
+    if (this.right === null) {
       return false;
     }
-    return rootNode.right.contains(value);
+    return this.right.contains(value);
   }
 
   static getAncestors(rootNode, target) {
@@ -599,7 +535,6 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
       .join(', ');
   }
 
-  // NLR
   static preorderTraversal(rootNode) {
     if (rootNode === null) {
       return;
@@ -633,21 +568,20 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
     });
   }
 
-  // LNR
   static inorderTraversal(rootNode) {
     if (rootNode === null) {
       return;
     }
+    let stack = [];
+    let currentNode = rootNode;
 
-    return new Promise(resolve => {
-      const stack = [];
-      let currentNode = rootNode;
+    let asyncTraversal = new Promise((resolve, reject) => {
       let previousNode = null;
-      const traversal = [];
-      const intervalId = setInterval(() => {
+      let traversal = [];
+      let intervalId = setInterval(() => {
         if (currentNode === null && stack.length === 0) {
           clearInterval(intervalId);
-          VisualBinaryTreeNode._unvisitNodeSVG(previousNode);
+          VisualBSTNode._unvisitNodeSVG(previousNode);
           resolve(traversal);
         } else {
           // Go as far as possible to the left
@@ -656,9 +590,9 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
             currentNode = currentNode.left;
           }
           currentNode = stack.pop();
-          VisualBinaryTreeNode._visitNodeSVG(currentNode);
+          VisualBSTNode._visitNodeSVG(currentNode);
           if (previousNode !== null) {
-            VisualBinaryTreeNode._unvisitNodeSVG(previousNode);
+            VisualBSTNode._unvisitNodeSVG(previousNode);
           }
           previousNode = currentNode;
           traversal.push(currentNode.value);
@@ -666,6 +600,8 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
         }
       }, 350);
     });
+
+    return asyncTraversal;
   }
 
   static postorderTraversal(rootNode) {}
@@ -674,21 +610,21 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
     if (rootNode === null) {
       return;
     }
-    return new Promise(resolve => {
-      const queue = [];
+    let asyncTraversal = new Promise((resolve, reject) => {
+      let queue = [];
       let currentNode = rootNode;
       let previousNode = null;
-      const traversal = [];
-      const intervalId = setInterval(() => {
+      let traversal = [];
+      let intervalId = setInterval(() => {
         if (currentNode === null) {
           clearInterval(intervalId);
-          VisualBinaryTreeNode._unvisitNodeSVG(previousNode);
+          VisualBSTNode._unvisitNodeSVG(previousNode);
           resolve(traversal);
         } else {
           traversal.push(currentNode.value);
-          VisualBinaryTreeNode._visitNodeSVG(currentNode);
+          VisualBSTNode._visitNodeSVG(currentNode);
           if (previousNode !== null) {
-            VisualBinaryTreeNode._unvisitNodeSVG(previousNode);
+            VisualBSTNode._unvisitNodeSVG(previousNode);
           }
           if (currentNode.left !== null) {
             queue.unshift(currentNode.left);
@@ -701,21 +637,22 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
         }
       }, 350);
     });
+    return asyncTraversal;
   }
 
   static _visitNodeSVG(node) {
-    const nodeElement = document.querySelector(`#${node._id} circle`);
+    let nodeElement = document.querySelector(`#${node._id} circle`);
     nodeElement.classList.add('current');
   }
 
   static _unvisitNodeSVG(node) {
-    const nodeElement = document.querySelector(`#${node._id} circle`);
+    let nodeElement = document.querySelector(`#${node._id} circle`);
     nodeElement.classList.remove('current');
   }
 
   _datumSVG(wrapper) {
     const { w, h } = this._size;
-    const datum = wrapper.group();
+    let datum = wrapper.group();
     datum
       .circle(w)
       .attr({
@@ -751,45 +688,43 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
       .move(w * 0.85, 0);
   }
 
-  static _calculateColumnCoords(column, level) {
-    return {
-      x: (1200 / 32) * column,
-      y: (700 / 6) * level,
-    };
+  _calculateColumnCoords(column, level) {
+    let coords = {};
+    const { w, h } = this._size;
+    coords.x = (1200 / 32) * column;
+    coords.y = (700 / 6) * level;
+
+    return coords;
   }
 
-  static _calculateColumnOffset(column, level) {
+  _calculateColumnOffset(column, level) {
     let offset = 0;
     switch (level) {
-      case 1: {
+      case 1:
         offset = column < 32 / 2 ? 8 : -8;
         break;
-      }
-      case 2: {
+      case 2:
         if (column === 4 || column === 20) {
           offset = 4;
         } else {
           offset = -4;
         }
         break;
-      }
-      case 3: {
+      case 3:
         if (column === 2 || column === 10 || column === 18 || column === 26) {
           offset = 2;
         } else {
           offset = -2;
         }
         break;
-      }
-      case 4: {
-        const levelColumns = [1, 5, 9, 13, 17, 21, 25, 29];
+      case 4:
+        let levelColumns = [1, 5, 9, 13, 17, 21, 25, 29];
         if (levelColumns.includes(column)) {
           offset = 1;
         } else {
           offset = -1;
         }
         break;
-      }
       default:
         return;
     }
@@ -800,15 +735,9 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
     if (level === 0) {
       return;
     }
-    const childCoords = VisualBinaryTreeNode._calculateColumnCoords(
-      column,
-      level,
-    );
-    const parentColumnOffset = VisualBinaryTreeNode._calculateColumnOffset(
-      column,
-      level,
-    );
-    const parentCoords = VisualBinaryTreeNode._calculateColumnCoords(
+    let childCoords = this._calculateColumnCoords(column, level);
+    let parentColumnOffset = this._calculateColumnOffset(column, level);
+    let parentCoords = this._calculateColumnCoords(
       column + parentColumnOffset,
       level - 1,
     );
@@ -824,250 +753,20 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
   }
 
   _drawNode() {
-    const { w } = this._size;
+    const { w, h } = this._size;
     const { _level, _column } = this;
-    const nodeFig = this._whiteboard.nested();
+    let nodeFig = this._whiteboard.nested();
+    // this._rightChildSVG(nodeFig);
+    // this._leftChildSVG(nodeFig);
     this._edgeSVG(this._whiteboard, _column, _level);
     this._datumSVG(nodeFig);
     this._id = nodeFig.id();
-    const coords = VisualBinaryTreeNode._calculateColumnCoords(_column, _level);
-    // nodeFig.attr({ ...coords, cx: 25, yx: 25 });
+    let coords = this._calculateColumnCoords(_column, _level);
+    //nodeFig.attr({ ...coords, cx: 25, yx: 25 });
     nodeFig.center(coords.x - w / 2, coords.y + 25);
     nodeFig.addClass('tree-node');
-    // nodeFig.dx(-w);
+    //nodeFig.dx(-w);
   }
 }
 
-// export { VisualBinaryTreeNode, VisualSinglyLinkedList };
-
-// import { VisualBinaryTreeNode, VisualSinglyLinkedList } from './dataStructures';
-
-class Console {
-  constructor(wrapper) {
-    this.wrapper = document.getElementById(wrapper);
-    this.count = 0;
-    this.setup();
-  }
-
-  setup() {
-    let browserConsole = console.log;
-    let wrapper = this.wrapper;
-    console.log = function(message) {
-      let entry = document.createElement('div');
-      let entryNumber = document.createElement('span');
-      entryNumber.className = 'console-entry-number';
-      let entryMsg = document.createElement('span');
-      entryMsg.textContent = message;
-      entry.append(entryNumber, entryMsg);
-      wrapper.append(entry);
-      wrapper.scrollTop = wrapper.scrollHeight;
-      browserConsole(message);
-    };
-  }
-
-  clear() {
-    this.wrapper.innerHTML = '';
-    this.count = 0;
-  }
-}
-
-class Whiteboard {
-  constructor(state) {
-    this.setupListeners();
-    this.whiteboard = SVG('whiteboard');
-    this.width = this.whiteboard.width();
-    this.height = this.whiteboard.height();
-    this.nodeSize = { w: 70, h: 50 };
-    this.setupConsole();
-    this.drawGuides();
-  }
-
-  setupListeners() {
-    let dataStructures = document.querySelectorAll('.ops ul');
-    let inputs = document.querySelectorAll('span.input');
-    inputs.forEach(input => {
-      input.addEventListener('keypress', this.handleOnKeyPressInput.bind(this));
-    });
-    dataStructures.forEach(ds => {
-      let dsName = ds.dataset.structure;
-      let ops = ds.querySelectorAll('li');
-      ops.forEach(op => {
-        op.addEventListener('click', this.handleOnClickOperation.bind(this));
-      });
-    });
-  }
-
-  handleOnClickOperation(evt) {
-    let { target } = evt;
-    if (target.tagName === 'BUTTON') {
-      let { structure, opName, hasInput } = target.parentElement.dataset;
-      if (hasInput === 'true') {
-        let inputs = target.parentElement.querySelectorAll('span');
-        var opParams = {};
-        inputs.forEach(input => {
-          opParams[input.dataset.paramName] = input.textContent;
-          input.textContent = '';
-        });
-      }
-      this.doOp(structure, opName, opParams);
-    }
-  }
-
-  linkedListOps(op, params) {
-    switch (op) {
-      case 'new':
-        this.visualLinkedList = new VisualSinglyLinkedList(this.whiteboard);
-        break;
-      case 'append':
-        this.visualLinkedList = VisualSinglyLinkedList.append(
-          this.visualLinkedList,
-          params.val,
-        );
-        break;
-      case 'prepend':
-        this.visualLinkedList = VisualSinglyLinkedList.prepend(
-          this.visualLinkedList,
-          params.val,
-        );
-        break;
-      case 'insertAtPos':
-        this.visualLinkedList = VisualSinglyLinkedList.insertAtPosition(
-          this.visualLinkedList,
-          params.val,
-          parseInt(params.pos),
-        );
-        break;
-      case 'removeAtPos':
-        this.visualLinkedList = VisualSinglyLinkedList.removeAtPosition(
-          this.visualLinkedList,
-          parseInt(params.pos),
-        );
-        break;
-      case 'findByValue':
-        //this.visualLinkedList.removeAtPosition;
-        console.log('future');
-        break;
-      default:
-        console.log('Unknown operation');
-    }
-  }
-
-  async bstOps(op, params) {
-    const { nodeSize: size, whiteboard } = this;
-    switch (op) {
-      case 'new': {
-        const wrapper = this.whiteboard.group();
-        // wrapper.before();
-        this.visualBSTNode = new VisualBinaryTreeNode({
-          value: parseInt(params.val),
-          whiteboard: wrapper,
-          size: { w: 50 },
-        });
-        break;
-      }
-      case 'insert': {
-        this.visualBSTNode = VisualBinaryTreeNode.insert(
-          this.visualBSTNode,
-          parseInt(params.val),
-        );
-        break;
-      }
-      case 'contains': {
-        let contains = VisualBinaryTreeNode.contains(
-          this.visualBSTNode,
-          parseInt(params.val),
-        );
-        if (contains) {
-          console.log(`The BST does contain the node ${params.val}`);
-        } else {
-          console.log(`The BST does NOT contain the node ${params.val}`);
-        }
-        break;
-      }
-      case 'getAncestors': {
-        const ancestors = VisualBinaryTreeNode.getAncestors(
-          this.visualBSTNode,
-          parseInt(params.val),
-        );
-        console.log(`The ancestors of ${params.val} are ${ancestors}`);
-        break;
-      }
-      case 'preorderTraversal': {
-        const preorderTraversal = await VisualBinaryTreeNode.preorderTraversal(
-          this.visualBSTNode,
-        );
-        console.log(`The preorder traversal (NLR) is: ${preorderTraversal}`);
-        break;
-      }
-      case 'inorderTraversal': {
-        const inorderTraversal = await VisualBinaryTreeNode.inorderTraversal(
-          this.visualBSTNode,
-        );
-        console.log(`The inorder traversal (LNR) is: ${inorderTraversal}`);
-        break;
-      }
-      case 'postorderTraversal': {
-        const postorderTraversal = await VisualBinaryTreeNode.inorderTraversal(
-          this.visualBSTNode,
-        );
-        console.log(`The postorder traversal (LRN) is: ${postorderTraversal}`);
-        break;
-      }
-      case 'levelorderTraversal': {
-        const levelorderTraversal = await VisualBinaryTreeNode.levelorderTraversal(
-          this.visualBSTNode,
-        );
-        console.log(`The levelorder traversal is: ${levelorderTraversal}`);
-        break;
-      }
-      default:
-        console.log('Unknown operation');
-    }
-  }
-
-  doOp(structure, opName, opParams) {
-    switch (structure) {
-      case 'linkedList':
-        this.linkedListOps(opName, opParams);
-        break;
-      case 'bstNode':
-        this.bstOps(opName, opParams);
-        break;
-      default:
-        console.log('Incorrect Data Structure');
-    }
-  }
-
-  handleOnKeyPressInput(evt) {
-    let { key } = evt;
-    if (key === 'Enter') {
-      evt.target.parentNode.querySelector('button').click();
-      evt.preventDefault();
-    } else if (evt.target.dataset.maxLength <= evt.target.textContent.length) {
-      evt.preventDefault();
-    }
-  }
-
-  drawGuides() {
-    const { width, height } = this;
-    const nested = this.whiteboard.nested();
-    const stroke = { color: '#DDD', width: 1 };
-    // Vertical line
-    nested.line(width / 2, 0, width / 2, height).stroke(stroke);
-    // Horizontal line
-    nested.line(0, height / 2, width, height / 2).stroke(stroke);
-    nested.addClass('guides');
-    nested.front();
-  }
-
-  setupConsole() {
-    this.console = new Console('whiteboardConsole');
-  }
-
-  clearConsole() {
-    this.console.clear();
-  }
-  clearWhiteboard() {
-    this.whiteboard.clear();
-  }
-}
+export { VisualBinaryTreeNode, VisualSinglyLinkedList };

@@ -1,0 +1,9 @@
+{
+  "rules": {
+    "no-console": ["off"],
+    "no-underscore-dangle": ["off"],
+    "consistent-return": "off",
+    "no-param-reassign": ["error", { "props": false }]
+  },
+  "extends": ["airbnb-base", "prettier"]
+}
