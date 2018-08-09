@@ -62,10 +62,11 @@ class Node {
   }
 }
 
-class SinglyLinkedListNode extends Node {
+class LinkedListNode extends Node {
   constructor(value = null) {
     super(value);
     this.next = null;
+    console.log(this);
   }
 }
 
@@ -82,24 +83,223 @@ class SinglyLinkedList {
     this.head = head;
   }
 
-  static append() {
-    console.log('Implement this');
+  // adds a node at the end of list
+  static append(head, value) {
+    console.info(head);
+
+    let i = 1;
+    // if list is empty
+    if (head === null) {
+      return new LinkedListNode(value);
+    }
+    let current = head;
+    // repeat while not at the end of the list
+    while (current.next !== null) {
+      // get to the next element
+      current = current.next;
+      i += 1;
+    }
+
+    current.next = new LinkedListNode(value);
+    // return new head
+    return head;
   }
 
-  static prepend() {
-    console.log('Implement this');
+  static prepend(head, value) {
+    const newHead = new LinkedListNode(value);
+    newHead.next = head;
+    return newHead;
   }
 
-  static insertAtPosition() {
-    console.log('Implement this');
+  // removes a node at k position and returns true, false if not found
+  static removeAtPosition(head, index) {
+    if (head === null) return null;
+    if (index === 1) {
+      const newHead = head.next;
+      return newHead;
+    }
+    let slow = head;
+    let fast = slow.next;
+    let i = 1;
+    while (slow.next !== null) {
+      if (i + 1 === index) {
+        slow.next = fast.next;
+        return true;
+      }
+      i += 1;
+      slow = slow.next;
+      fast = fast.next;
+    }
+    return false;
   }
 
-  static reverse() {
-    console.log('Implement this');
+  static insertAtPosition(head, value, pos = 1) {
+    if (pos === 1) {
+      return SinglyLinkedList.prepend(head, value);
+    }
+    let slow = head;
+    let fast = slow.next;
+    let i = 2;
+    while (slow !== null) {
+      if (pos === i) {
+        const newNode = new LinkedListNode(value);
+        newNode.next = fast;
+        slow.next = newNode;
+        return head;
+      }
+      i += 1;
+      slow = slow.next;
+      fast = fast.next;
+    }
+    return false;
+  }
+
+  toString() {
+    if (this.head === null) return null;
+    let current = this.head;
+    let str = '';
+    while (current !== null) {
+      str += `[${current.value}]->`;
+      if (current.next === null) {
+        str += 'null';
+      }
+      current = current.next;
+    }
+    return str;
+  }
+
+  // find the first node with value
+  static findByValue(head, value) {
+    if (head === null) return null;
+    let current = head;
+    while (current !== null) {
+      if (current.value === value) {
+        return current;
+      }
+      current = current.next;
+    }
+    return null;
   }
 }
 
-class Queue {}
+class DataStructureSVG {
+  constructor(svgId = 'whiteboard') {
+    this.whiteboard = SVG.get(svgId);
+  }
+
+  get whiteboardWidth() {
+    return this.whiteboard.width();
+  }
+
+  get whiteboardHeight() {
+    return this.whiteboard.height();
+  }
+}
+
+class QueueSVG extends DataStructureSVG {
+  constructor(svgId = 'whiteboard') {
+    super(svgId);
+    this.containerSize = {
+      w: this.whiteboardWidth * 0.9,
+      h: this.whiteboardHeight * 0.25,
+    };
+    this.drawContainer();
+  }
+
+  drawContainer() {
+    const { containerSize, whiteboardHeight, whiteboardWidth } = this;
+    console.info({ containerSize, whiteboardHeight, whiteboardWidth });
+    const containerWrapper = this.whiteboard.nested();
+    containerWrapper.line(
+      whiteboardWidth - containerSize.w,
+      whiteboardHeight / 2 - containerSize.h / 2,
+      Math.abs(whiteboardWidth - containerSize.w + containerSize.w),
+      whiteboardHeight / 2 - containerSize.h / 2,
+    );
+    containerWrapper.line(
+      whiteboardWidth - containerSize.w,
+      whiteboardHeight / 2 + containerSize.h / 2,
+      Math.abs(containerSize.w - whiteboardWidth),
+      whiteboardHeight / 2 + containerSize.h / 2,
+    );
+    containerWrapper.addClass('queue-container');
+  }
+  drawDatum(nodeWrapper, value) {
+    nodeWrapper.rect(100, 100);
+    nodeWrapper.text(value.toString());
+  }
+
+  drawNode(value) {
+    const nodeWrapper = this.whiteboard.nested();
+    this.drawDatum(nodeWrapper, value);
+  }
+
+  calculateNodeCoords(pos) {
+    console.info('i');
+  }
+}
+
+class Queue {
+  constructor(svgHandler = null) {
+    this.list = new SinglyLinkedList();
+    this.svgHandler = new svgHandler();
+  }
+
+  enqueue(value) {
+    this.list.head = SinglyLinkedList.append(this.list.head, value);
+    if (this.svgHandler) {
+      this.svgHandler.drawNode(value);
+    }
+  }
+
+  dequeue() {
+    if (this.list === null) {
+      return null;
+    }
+    const removedHead = this.list.head.value;
+    this.list.head = SinglyLinkedList.removeAtPosition(this.list.head, 1);
+    return removedHead;
+  }
+
+  get front() {
+    if (this.list.head === null) {
+      return null;
+    }
+    return this.list.head.value;
+  }
+
+  get back() {
+    if (this.list.head === null) {
+      return null;
+    }
+    let currentNode = this.list.head;
+    while (currentNode.next !== null) {
+      currentNode = currentNode.next;
+    }
+    return currentNode.value;
+  }
+
+  isEmpty() {
+    return this.list.head === null;
+  }
+
+  toString() {
+    const nodeValues = [];
+    let currentNode = this.list.head;
+    while (currentNode.next !== null) {
+      nodeValues.unshift(currentNode.value);
+      currentNode = currentNode.next;
+    }
+    let str = '';
+    for (let i = 0; i < nodeValues.length; i++) {
+      str += `[${nodeValues[i]}]`;
+      if (i !== nodeValues.length - 1) {
+        str += '->';
+      }
+    }
+    return str;
+  }
+}
 
 class Stack {}
 class BinaryTreeNode extends Node {
@@ -147,7 +347,7 @@ class BinaryTreeNode extends Node {
  *  
  */
 
-class VisualSinglyLinkedListNode extends SinglyLinkedListNode {
+class VisualSinglyLinkedListNode extends LinkedListNode {
   constructor({
     value,
     whiteboard,
