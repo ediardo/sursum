@@ -63,13 +63,14 @@ class Node {
 }
 
 class LinkedListNode extends Node {
-  constructor(value = null) {
+  constructor({ value = null, next = null, _id }) {
     super(value);
-    this.next = null;
+    this.next = next;
+    this._id = _id;
     console.log(this);
   }
 }
-
+/*
 class DoublyLinkedListNode extends Node {
   constructor(value = null) {
     super(value);
@@ -77,6 +78,7 @@ class DoublyLinkedListNode extends Node {
     this.next = null;
   }
 }
+*/
 
 class SinglyLinkedList {
   constructor({ head = null, svgHandler = null }) {
@@ -107,35 +109,58 @@ class SinglyLinkedList {
   }
 
   // adds a node at the end of list
-  append(value) {
+  async append(value) {
     // if list is empty
     if (this.head === null) {
-      const newHead = new LinkedListNode(value);
+      let _id;
       if (this.svgHandler) {
-        this.svgHandler.drawNode(value, 1);
+        _id = this.svgHandler.drawNode({ value });
       }
+      const newHead = new LinkedListNode({ value, _id });
       this.head = newHead;
       return true;
     }
     let current = this.head;
-    let pos = 2;
+    /*
     this.svgHandler.drawPointer({
       name: 'current',
-      pos,
+      pos: 2,
       from: 'bottom',
     });
+    */
     // repeat while not at the end of the list
-    while (current.next !== null) {
-      // get to the next element
-      current = current.next;
-      pos += 1;
-      this.svgHandler.movePointer('current', pos);
-      setTimeout(undefined, 1000);
-    }
+    const loop = () => {
+      console.log(current);
+      return new Promise(resolve => {
+        let previousNode = null;
+        let pos = 2;
+        const intervalId = setInterval(() => {
+          if (current.next === null) {
+            clearInterval(intervalId);
+            if (previousNode !== null) {
+              this.svgHandler.unvisitNode(previousNode);
+            }
+            this.svgHandler.unvisitNode(current);
 
-    current.next = new LinkedListNode(value);
-    this.svgHandler.drawNode(value, pos);
-    // return new head
+            let _id;
+            if (this.svgHandler) {
+              _id = this.svgHandler.drawNode({ value, pos });
+            }
+            current.next = new LinkedListNode({ value, _id });
+            resolve(current);
+          } else {
+            previousNode = current;
+            current = current.next;
+            this.svgHandler.visitNode(current);
+            if (previousNode !== null) {
+              this.svgHandler.unvisitNode(previousNode);
+            }
+            pos += 1;
+          }
+        }, 350);
+      });
+    };
+    await loop();
     return true;
   }
 
@@ -276,8 +301,9 @@ class SinglyLinkedList {
 }
 
 class DataStructureSVG {
-  constructor(svgId = 'whiteboard') {
+  constructor({ svgId = 'whiteboard', visitClass = 'current' }) {
     this.whiteboard = SVG.get(svgId);
+    this.visitClass = visitClass;
   }
 
   get whiteboardWidth() {
@@ -286,6 +312,19 @@ class DataStructureSVG {
 
   get whiteboardHeight() {
     return this.whiteboard.height();
+  }
+
+  unvisitNode(node) {
+    const { visitClass } = this;
+    const nodeFig = SVG.get(node._id);
+    nodeFig.removeClass(visitClass);
+    console.log('removing lass');
+  }
+
+  visitNode(node) {
+    const { visitClass } = this;
+    const nodeFig = SVG.get(node._id);
+    nodeFig.addClass(visitClass);
   }
 }
 
@@ -367,13 +406,14 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     this.pointers[name] = pointerFig.id();
   }
 
-  drawNode(value, pos) {
+  drawNode({ value, pos = 1 }) {
     const nodeFig = this.whiteboard.nested();
     const { x, y } = this.calculatePos(pos);
     this.datumSVG(nodeFig, value);
     this.nextSVG(nodeFig);
     nodeFig.center(x, y);
     nodeFig.addClass('list-node');
+    return nodeFig.id();
   }
 
   movePointer(pointerName, pos) {
@@ -411,12 +451,13 @@ class QueueSVG extends DataStructureSVG {
     );
     containerWrapper.addClass('queue-container');
   }
+
   drawDatum(nodeWrapper, value) {
     nodeWrapper.rect(100, 100);
     nodeWrapper.text(value.toString());
   }
 
-  drawNode(value) {
+  drawNode({ value, pos }) {
     console.info('drawing');
     const nodeWrapper = this.whiteboard.nested();
     this.drawDatum(nodeWrapper, value);
