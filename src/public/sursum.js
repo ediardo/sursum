@@ -79,10 +79,10 @@ class DoublyLinkedListNode extends Node {
 }
 
 class SinglyLinkedList {
-  constructor(head = null, svgHandler = null) {
+  constructor({ head = null, svgHandler = null }) {
     this.head = head;
     if (svgHandler) {
-      this.svgHandler = new svgHandler();
+      this.svgHandler = svgHandler;
     }
   }
 
@@ -99,31 +99,42 @@ class SinglyLinkedList {
 
   get tail() {
     if (this.head === null) return null;
-
     let current = this.head;
     while (current.next !== null) {
       current = current.next;
     }
     return current;
   }
+
   // adds a node at the end of list
   append(value) {
-    let i = 1;
     // if list is empty
     if (this.head === null) {
       const newHead = new LinkedListNode(value);
+      if (this.svgHandler) {
+        this.svgHandler.drawNode(value, 1);
+      }
       this.head = newHead;
       return true;
     }
     let current = this.head;
+    let pos = 2;
+    this.svgHandler.drawPointer({
+      name: 'current',
+      pos,
+      from: 'bottom',
+    });
     // repeat while not at the end of the list
     while (current.next !== null) {
       // get to the next element
       current = current.next;
-      i += 1;
+      pos += 1;
+      this.svgHandler.movePointer('current', pos);
+      setTimeout(undefined, 1000);
     }
 
     current.next = new LinkedListNode(value);
+    this.svgHandler.drawNode(value, pos);
     // return new head
     return true;
   }
@@ -275,6 +286,100 @@ class DataStructureSVG {
 
   get whiteboardHeight() {
     return this.whiteboard.height();
+  }
+}
+
+class SinglyLinkedListSVG extends DataStructureSVG {
+  constructor({ svgId = 'whiteboard', size = { w: 50, h: 40 }, id }) {
+    super(svgId);
+    this.size = size;
+    this.margin = 25;
+    this.nodeDistance = 25;
+    this.nextBoxWidth = 25;
+    this.pointers = {};
+    this.drawPointer({
+      name: 'head',
+      pos: 1,
+      from: 'top',
+    });
+  }
+
+  calculatePos(pos = 1) {
+    const { w, h } = this.size;
+    const { whiteboardWidth, whiteboardHeight } = this;
+    const { nodeDistance } = this;
+    const x = (w + 25 + nodeDistance) * pos + this.margin;
+    const y = whiteboardHeight / 2 - h / 2;
+    return { x, y };
+  }
+
+  moveToPos(nodeId, pos) {}
+
+  datumSVG(wrapper, value) {
+    const { w, h } = this.size;
+    const datum = wrapper.group();
+    datum.rect(w, h).addClass('list-node-datum');
+    datum
+      .text(value.toString())
+      .center((w * 0.8) / 2, h / 2)
+      .addClass('list-node-value');
+  }
+
+  nextSVG(wrapper) {
+    const w = this.nextBoxWidth;
+    const { h } = this.size;
+    /*
+    const pointerCircleRadius = w / 3;
+    
+    */
+    const next = wrapper.group();
+    next
+      .rect(w, h)
+      .addClass('list-node-next')
+      .move(this.size.w, 0);
+    /*
+    pointer
+      .circle(pointerCircleRadius)
+      .addClass('list-node-link')
+      .center(this._size.w - w / 2, this._size.h / 2);
+    const linkPoints = [
+      [this._size.w * 0.9, this._size.h / 2],
+      [this._size.w * 0.9 + 25, this._size.h / 2],
+      [this._size.w * 0.9 + 15, this._size.h / 2 - 5],
+      [this._size.w * 0.9 + 25, this._size.h / 2],
+      [this._size.w * 0.9 + 15, this._size.h / 2 + 5],
+      [this._size.w * 0.9 + 25, this._size.h / 2],
+    ];
+    pointer.polyline(linkPoints).addClass('list-node-link');
+    */
+  }
+
+  drawPointer({ name = 'head', pos = 1, from = 'top' }) {
+    const pointerFig = this.whiteboard.nested();
+    const length = 100;
+    const nodePos = this.calculatePos(pos);
+    const x1 = nodePos.x;
+    const y1 = from === 'top' ? nodePos.y - length : nodePos.y;
+    const x2 = x1;
+    const y2 = from === 'top' ? nodePos.y : nodePos.y + length;
+    pointerFig.line(x1, y1, x2, y2);
+    pointerFig.addClass(`list-pointer list-pointer-${name}`);
+    this.pointers[name] = pointerFig.id();
+  }
+
+  drawNode(value, pos) {
+    const nodeFig = this.whiteboard.nested();
+    const { x, y } = this.calculatePos(pos);
+    this.datumSVG(nodeFig, value);
+    this.nextSVG(nodeFig);
+    nodeFig.center(x, y);
+    nodeFig.addClass('list-node');
+  }
+
+  movePointer(pointerName, pos) {
+    const pointerId = this.pointers[pointerName];
+    const pointerFig = SVG.get(pointerId);
+    pointerFig.move(100, 200);
   }
 }
 
@@ -509,65 +614,7 @@ class BinaryTreeNode extends Node {
  *  
  */
 
-class VisualSinglyLinkedListNode extends LinkedListNode {
-  constructor({
-    value,
-    whiteboard,
-    size = { w: 100, h: 50 },
-    pos = { x: 0, y: 0 },
-  }) {
-    super(value);
-    this.next = null;
-    this._size = size;
-    this._pos = pos;
-    this._whiteboard = whiteboard;
-    this._drawNode();
-  }
-
-  _datumSVG(wrapper) {
-    const { w, h } = this._size;
-    const datum = wrapper.group();
-    datum.rect(w * 0.8, h).addClass('list-node-datum');
-    datum
-      .text(this.value.toString())
-      .center((w * 0.8) / 2, h / 2)
-      .addClass('list-node-value');
-  }
-
-  _nextSVG(wrapper) {
-    const { w } = this._size.w * 0.2;
-    const { h } = this._size.h;
-    const pointerCircleRadius = w / 3;
-    const pointer = wrapper.group();
-    pointer
-      .rect(w, h)
-      .addClass('list-node-next')
-      .move(this._size.w * 0.8, 0);
-    pointer
-      .circle(pointerCircleRadius)
-      .addClass('list-node-link')
-      .center(this._size.w - w / 2, this._size.h / 2);
-    const linkPoints = [
-      [this._size.w * 0.9, this._size.h / 2],
-      [this._size.w * 0.9 + 25, this._size.h / 2],
-      [this._size.w * 0.9 + 15, this._size.h / 2 - 5],
-      [this._size.w * 0.9 + 25, this._size.h / 2],
-      [this._size.w * 0.9 + 15, this._size.h / 2 + 5],
-      [this._size.w * 0.9 + 25, this._size.h / 2],
-    ];
-    pointer.polyline(linkPoints).addClass('list-node-link');
-  }
-
-  _drawNode() {
-    const { x, y } = this._pos;
-    const nodeFig = this._whiteboard.nested();
-    this._datumSVG(nodeFig);
-    this._nextSVG(nodeFig);
-    nodeFig.attr({ x, y });
-    nodeFig.addClass('list-node');
-    this._id = nodeFig.id();
-  }
-}
+class VisualSinglyLinkedListNode extends LinkedListNode {}
 
 /*
  *
