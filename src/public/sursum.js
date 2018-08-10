@@ -79,20 +79,43 @@ class DoublyLinkedListNode extends Node {
 }
 
 class SinglyLinkedList {
-  constructor(head = null) {
+  constructor(head = null, svgHandler = null) {
     this.head = head;
+    if (svgHandler) {
+      this.svgHandler = new svgHandler();
+    }
   }
 
-  // adds a node at the end of list
-  static append(head, value) {
-    console.info(head);
+  // return length of the list
+  get length() {
+    let length = 0;
+    let current = this.head;
+    while (current !== null) {
+      current = current.next;
+      length += 1;
+    }
+    return length;
+  }
 
+  get tail() {
+    if (this.head === null) return null;
+
+    let current = this.head;
+    while (current.next !== null) {
+      current = current.next;
+    }
+    return current;
+  }
+  // adds a node at the end of list
+  append(value) {
     let i = 1;
     // if list is empty
-    if (head === null) {
-      return new LinkedListNode(value);
+    if (this.head === null) {
+      const newHead = new LinkedListNode(value);
+      this.head = newHead;
+      return true;
     }
-    let current = head;
+    let current = this.head;
     // repeat while not at the end of the list
     while (current.next !== null) {
       // get to the next element
@@ -102,23 +125,47 @@ class SinglyLinkedList {
 
     current.next = new LinkedListNode(value);
     // return new head
-    return head;
+    return true;
   }
 
-  static prepend(head, value) {
+  prepend(value) {
     const newHead = new LinkedListNode(value);
-    newHead.next = head;
-    return newHead;
+    newHead.next = this.head;
+    this.head = newHead;
+    return true;
+  }
+
+  removeByValue(value, callback = undefined) {
+    if (this.head === null) return null;
+    if (this.head.value === value) {
+      this.head = this.head.next;
+      return true;
+    }
+    // this is my pacer
+    let slow = this.head;
+    // this has a link to what would become the new tail
+    let fast = slow.next;
+    while (slow.next !== null) {
+      if (slow.next.value === value) {
+        slow.next = fast.next;
+        return true;
+      }
+      slow = slow.next;
+      if (slow !== null) {
+        fast = fast.next;
+      }
+    }
+    return false;
   }
 
   // removes a node at k position and returns true, false if not found
-  static removeAtPosition(head, index) {
-    if (head === null) return null;
+  removeAtPosition(index) {
+    if (this.head === null) return null;
     if (index === 1) {
-      const newHead = head.next;
-      return newHead;
+      this.head = this.head.next;
+      return true;
     }
-    let slow = head;
+    let slow = this.head;
     let fast = slow.next;
     let i = 1;
     while (slow.next !== null) {
@@ -128,32 +175,42 @@ class SinglyLinkedList {
       }
       i += 1;
       slow = slow.next;
-      fast = fast.next;
+      if (slow !== null) {
+        fast = fast.next;
+      }
     }
     return false;
   }
 
-  static insertAtPosition(head, value, pos = 1) {
+  insertAtPosition(value, pos = 1) {
     if (pos === 1) {
-      return SinglyLinkedList.prepend(head, value);
+      this.prepend(value);
+      return true;
     }
-    let slow = head;
+    let slow = this.head;
     let fast = slow.next;
+    // start from position two
     let i = 2;
+    // loop until there are no more nodes
     while (slow !== null) {
       if (pos === i) {
         const newNode = new LinkedListNode(value);
         newNode.next = fast;
         slow.next = newNode;
-        return head;
+        return true;
       }
       i += 1;
+      // move to the next node
       slow = slow.next;
-      fast = fast.next;
+      // move to the next node
+      if (slow !== null) {
+        fast = fast.next;
+      }
     }
     return false;
   }
 
+  // print a string representing the linked list
   toString() {
     if (this.head === null) return null;
     let current = this.head;
@@ -169,14 +226,39 @@ class SinglyLinkedList {
   }
 
   // find the first node with value
-  static findByValue(head, value) {
-    if (head === null) return null;
-    let current = head;
+  findByValue(value, callback = undefined) {
+    if (this.head === null) return null;
+    let current = this.head;
+    // lopp until there are no more nodes
     while (current !== null) {
-      if (current.value === value) {
+      // If search by callback
+      if (callback) {
+        if (callback(current.value)) {
+          return current;
+        }
+      } else if (current.value === value) {
+        // if we found the first node with the value
+        // then return the node
+        return current;
+      }
+
+      current = current.next;
+    }
+    return null;
+  }
+
+  // find a node at position i
+  findAtPosition(pos = 1) {
+    if (this.head === null) return null;
+
+    let current = this.head;
+    let i = 1;
+    while (current !== null) {
+      if (pos === i) {
         return current;
       }
       current = current.next;
+      i += 1;
     }
     return null;
   }
@@ -230,6 +312,7 @@ class QueueSVG extends DataStructureSVG {
   }
 
   drawNode(value) {
+    console.info('drawing');
     const nodeWrapper = this.whiteboard.nested();
     this.drawDatum(nodeWrapper, value);
   }
@@ -239,25 +322,22 @@ class QueueSVG extends DataStructureSVG {
   }
 }
 
+// First in, First Out (FIFO)
 class Queue {
   constructor(svgHandler = null) {
     this.list = new SinglyLinkedList();
-    this.svgHandler = new svgHandler();
   }
 
   enqueue(value) {
-    this.list.head = SinglyLinkedList.append(this.list.head, value);
-    if (this.svgHandler) {
-      this.svgHandler.drawNode(value);
-    }
+    return this.list.append(value);
   }
 
   dequeue() {
-    if (this.list === null) {
+    if (this.list.head === null) {
       return null;
     }
     const removedHead = this.list.head.value;
-    this.list.head = SinglyLinkedList.removeAtPosition(this.list.head, 1);
+    this.list.removeAtPosition(1);
     return removedHead;
   }
 
@@ -272,11 +352,11 @@ class Queue {
     if (this.list.head === null) {
       return null;
     }
-    let currentNode = this.list.head;
-    while (currentNode.next !== null) {
-      currentNode = currentNode.next;
-    }
-    return currentNode.value;
+    return this.list.tail.value;
+  }
+
+  get length() {
+    return this.list.length;
   }
 
   isEmpty() {
@@ -301,7 +381,89 @@ class Queue {
   }
 }
 
-class Stack {}
+// Last In, First Out (LIFO)
+class Stack {
+  constructor() {
+    this.stack = new SinglyLinkedList();
+  }
+
+  pop() {
+    const element = this.stack.findAtPosition(this.stack.length);
+    this.stack.removeAtPosition(this.stack.length);
+    return element.value;
+  }
+
+  push(value) {
+    return this.stack.append(value);
+  }
+
+  get top() {
+    return this.stack.findAtPosition(this.stack.length);
+  }
+}
+
+class HashTable {
+  constructor(size = 32) {
+    this.buckets = new Array(size).fill(null).map(() => new SinglyLinkedList());
+    this.keys = {};
+  }
+
+  hash(key) {
+    const hash = Array.from(key).reduce(
+      (hashAccumulator, keySymbol) => hashAccumulator + keySymbol.charCodeAt(0),
+      0,
+    );
+    return hash % this.buckets.length;
+  }
+
+  set(key, value) {
+    const keyHash = this.hash(key);
+    this.keys[key] = keyHash;
+    const bucketLinkedList = this.buckets[keyHash];
+    const node = bucketLinkedList.findByValue(
+      undefined,
+      value => value.key === key,
+    );
+
+    if (!node) {
+      bucketLinkedList.append({ key, value });
+    } else {
+      node.value.value = value;
+    }
+  }
+
+  delete(key) {
+    // get hash for current key
+    const keyHash = this.hash(key);
+    // get linkedlist inside of the bucket
+    const bucketLinkedList = this.buckets[keyHash];
+
+    const node = bucketLinkedList.findByValue(
+      undefined,
+      value => value.key === key,
+    );
+
+    return node ? bucketLinkedList.removeByValue(node.value) : undefined;
+  }
+
+  get(key) {
+    const bucketLinkedList = this.buckets[this.hash(key)];
+    const node = bucketLinkedList.findByValue(
+      undefined,
+      value => value.key === key,
+    );
+    return node ? node.value.value : undefined;
+  }
+
+  has(key) {
+    return Object.hasOwnProperty.call(this.keys, key);
+  }
+
+  getKeys() {
+    return Object.keys(this.keys);
+  }
+}
+
 class BinaryTreeNode extends Node {
   constructor(value, left, right) {
     super(value);
