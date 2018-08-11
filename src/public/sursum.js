@@ -121,43 +121,43 @@ class SinglyLinkedList {
       return true;
     }
     let current = this.head;
-    /*
     this.svgHandler.drawPointer({
       name: 'current',
-      pos: 2,
-      from: 'bottom',
+      pos: 1,
+      direction: 'bottom',
+      label: 'current',
     });
-    */
     // repeat while not at the end of the list
     const loop = () => {
-      console.log(current);
       return new Promise(resolve => {
-        let previousNode = null;
+        let previousNode = current;
+        this.svgHandler.visitNode(current);
         let pos = 2;
         const intervalId = setInterval(() => {
-          if (current.next === null) {
-            clearInterval(intervalId);
+          if (current.next !== null) {
+            previousNode = current;
+            current = current.next;
+            this.svgHandler.visitNode(current);
+            this.svgHandler.movePointer({ name: 'current', pos });
+            pos += 1;
+            if (previousNode !== null) {
+              this.svgHandler.unvisitNode(previousNode);
+            }
+          } else {
             if (previousNode !== null) {
               this.svgHandler.unvisitNode(previousNode);
             }
             this.svgHandler.unvisitNode(current);
-
             let _id;
             if (this.svgHandler) {
               _id = this.svgHandler.drawNode({ value, pos });
             }
             current.next = new LinkedListNode({ value, _id });
+            this.svgHandler.destroyPointer({ name: 'current' });
+            clearInterval(intervalId);
             resolve(current);
-          } else {
-            previousNode = current;
-            current = current.next;
-            this.svgHandler.visitNode(current);
-            if (previousNode !== null) {
-              this.svgHandler.unvisitNode(previousNode);
-            }
-            pos += 1;
           }
-        }, 350);
+        }, 300);
       });
     };
     await loop();
@@ -304,6 +304,7 @@ class DataStructureSVG {
   constructor({ svgId = 'whiteboard', visitClass = 'current' }) {
     this.whiteboard = SVG.get(svgId);
     this.visitClass = visitClass;
+    this.pointers = {};
   }
 
   get whiteboardWidth() {
@@ -314,11 +315,79 @@ class DataStructureSVG {
     return this.whiteboard.height();
   }
 
+  destroyPointer({ name }) {
+    const { id } = this.pointers[name];
+    const pointerFig = SVG.get(id);
+    pointerFig.remove();
+  }
+
+  drawPointer({
+    name,
+    pos = { x: 0, y: 0 },
+    direction = 'top',
+    label,
+    length = 100,
+    offset,
+  }) {
+    const linePoints = new Array(4).fill(null);
+    const pointerPos = this.calculatePos(pos);
+    switch (direction) {
+      case 'top': {
+        linePoints[0] = 0;
+        linePoints[1] = 0;
+        linePoints[2] = 0;
+        linePoints[3] = length;
+        pointerPos.y -= length;
+        break;
+      }
+      case 'bottom': {
+        linePoints[0] = 0;
+        linePoints[1] = length;
+        linePoints[2] = 0;
+        linePoints[3] = 0;
+        break;
+      }
+      case 'left': {
+        linePoints[0] = 0;
+        linePoints[1] = 0;
+        linePoints[2] = length;
+        linePoints[3] = 0;
+        break;
+      }
+      case 'right': {
+        linePoints[0] = length;
+        linePoints[1] = 0;
+        linePoints[2] = 0;
+        linePoints[3] = 0;
+        break;
+      }
+      default: {
+      }
+    }
+
+    const pointerFig = this.whiteboard.nested();
+    // const x1 = nodePos.x;
+    // const y1 = from === 'top' ? nodePos.y - length : nodePos.y + length;
+    // pointerFig.line(x1, y1, x2, y2);
+    pointerFig.line(...linePoints);
+    pointerFig.move(pointerPos.x, pointerPos.y + offset);
+    pointerFig.addClass(`list-pointer list-pointer-${name}`);
+    pointerFig.text(label.toString());
+    this.pointers[name] = { id: pointerFig.id(), direction };
+    console.log(this.pointers);
+  }
+
+  movePointer({ name, pos }) {
+    const { id } = this.pointers[name];
+    const { x, y } = this.calculatePos(pos);
+    const pointerFig = SVG.get(id);
+    pointerFig.cx(x);
+  }
+
   unvisitNode(node) {
     const { visitClass } = this;
     const nodeFig = SVG.get(node._id);
     nodeFig.removeClass(visitClass);
-    console.log('removing lass');
   }
 
   visitNode(node) {
@@ -339,7 +408,9 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     this.drawPointer({
       name: 'head',
       pos: 1,
-      from: 'top',
+      direction: 'top',
+      label: 'head',
+      offset: this.size.h,
     });
   }
 
@@ -393,17 +464,18 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     */
   }
 
-  drawPointer({ name = 'head', pos = 1, from = 'top' }) {
-    const pointerFig = this.whiteboard.nested();
-    const length = 100;
-    const nodePos = this.calculatePos(pos);
-    const x1 = nodePos.x;
-    const y1 = from === 'top' ? nodePos.y - length : nodePos.y;
-    const x2 = x1;
-    const y2 = from === 'top' ? nodePos.y : nodePos.y + length;
-    pointerFig.line(x1, y1, x2, y2);
-    pointerFig.addClass(`list-pointer list-pointer-${name}`);
-    this.pointers[name] = pointerFig.id();
+  drawPointer({
+    name,
+    pos = { x: 0, y: 0 },
+    direction = 'top',
+    label,
+    length = 100,
+  }) {
+    let offset = 0;
+    if (direction === 'bottom') {
+      offset = this.size.h;
+    }
+    super.drawPointer({ name, pos, direction, label, length, offset });
   }
 
   drawNode({ value, pos = 1 }) {
@@ -416,10 +488,12 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     return nodeFig.id();
   }
 
-  movePointer(pointerName, pos) {
-    const pointerId = this.pointers[pointerName];
-    const pointerFig = SVG.get(pointerId);
-    pointerFig.move(100, 200);
+  movePointer({ name, pos = 1 }) {
+    super.movePointer({ name, pos });
+  }
+
+  destroyPointer({ name }) {
+    super.destroyPointer({ name });
   }
 }
 
@@ -1328,7 +1402,7 @@ class Whiteboard {
     this.width = this.whiteboard.width();
     this.height = this.whiteboard.height();
     this.nodeSize = { w: 70, h: 50 };
-    this.setupConsole();
+    // this.setupConsole();
     this.drawGuides();
   }
 
