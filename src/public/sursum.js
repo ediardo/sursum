@@ -1,90 +1,41 @@
 /*
-       Utils
-      
-String.prototype.capitalize = function() {
-  return this.charAt(0).toUpperCase() + this.substr(1);
-};
-
-Array.prototype.toInt = function() {
-  return this.map(n => parseInt(n));
-};
-
-Array.prototype.generate = function(n, sorted = false) {
-  let arr = new Array();
-  if (sorted) {
-    for (let i = 1; i <= n; i++) {
-      arr.push(i);
-    }
-  } else {
-    for (let i = 1; i <= n; i++) {
-      arr.push(Math.floor(Math.random() * n));
-    }
-  }
-  console.log(arr);
-  return arr;
-};
-
-Array.prototype.swap = function(a, b) {
-  if (a === b) return this;
-  if (a >= this.length || b >= this.length) return -1;
-  let tmp = this[b];
-  this[b] = this[a];
-  this[a] = tmp;
-  return this;
-};
-
-Array.prototype.bubbleSort = function(direction = "asc") {
-  for (let i = 0; i < this.length - 1; i++) {
-    for (let j = 0; j < this.length - i - 1; j++) {
-      if (this[j] > this[j + 1]) {
-        this.swap(j, j + 1);
-      }
-    }
-  }
-  console.log(this);
-  return this;
-};
-
-Array.prototype.insertionSort = function(direction = "asc") {};
-
-Array.prototype.quickSort = function(direction = "asc") {};
-
-Array.prototype.mergeSort = function(direction = "asc") {};
-
-*/
-/*
  * DATA STRUCTURES
  * 
  */
-class Node {
+class DSNode {
   constructor(value = null) {
     this.value = value;
   }
 }
 
-class LinkedListNode extends Node {
+class LinkedListNode extends DSNode {
   constructor({ value = null, next = null, _id }) {
     super(value);
     this.next = next;
     this._id = _id;
-    console.log(this);
   }
 }
-/*
-class DoublyLinkedListNode extends Node {
-  constructor(value = null) {
-    super(value);
-    this.prev = null;
-    this.next = null;
-  }
-}
-*/
 
 class SinglyLinkedList {
-  constructor({ head = null, svgHandler = null }) {
-    this.head = head;
-    if (svgHandler) {
-      this.svgHandler = svgHandler;
+  constructor(args = { head: null, svgHandler: null }) {
+    const { head, svgHandler } = args;
+    this.head = head || null;
+    switch (svgHandler) {
+      case 'lists': {
+        this.svgHandler = new SinglyLinkedListSVG();
+        break;
+      }
+      case 'stack': {
+        this.svgHandler = new StackSVG();
+        break;
+      }
+      case 'queue': {
+        this.svgHandler = new QueueSVG();
+        break;
+      }
+      default: {
+        this.svgHandler = null;
+      }
     }
   }
 
@@ -109,7 +60,7 @@ class SinglyLinkedList {
   }
 
   // adds a node at the end of list
-  async append(value) {
+  async appendSVG(value) {
     // if list is empty
     if (this.head === null) {
       let _id;
@@ -121,59 +72,178 @@ class SinglyLinkedList {
       return true;
     }
     let current = this.head;
-    /*
-    this.svgHandler.drawPointer({
-      name: 'current',
-      pos: 2,
-      from: 'bottom',
-    });
-    */
+    if (this.svgHandler) {
+      this.svgHandler.drawPointer({
+        name: 'current',
+        pos: 1,
+        direction: 'bottom',
+        label: 'current',
+      });
+    }
     // repeat while not at the end of the list
-    const loop = () => {
-      console.log(current);
-      return new Promise(resolve => {
-        let previousNode = null;
+    const loop = () =>
+      new Promise(resolve => {
+        let previousNode = current;
+        if (this.svgHandler) {
+          this.svgHandler.visitNode({ node: current });
+        }
         let pos = 2;
         const intervalId = setInterval(() => {
-          if (current.next === null) {
-            clearInterval(intervalId);
-            if (previousNode !== null) {
-              this.svgHandler.unvisitNode(previousNode);
-            }
-            this.svgHandler.unvisitNode(current);
-
-            let _id;
-            if (this.svgHandler) {
-              _id = this.svgHandler.drawNode({ value, pos });
-            }
-            current.next = new LinkedListNode({ value, _id });
-            resolve(current);
-          } else {
+          if (current.next !== null) {
             previousNode = current;
             current = current.next;
-            this.svgHandler.visitNode(current);
-            if (previousNode !== null) {
-              this.svgHandler.unvisitNode(previousNode);
+            if (this.svgHandler) {
+              this.svgHandler.visitNode({ node: current });
+              this.svgHandler.movePointer({ name: 'current', pos });
+              if (previousNode !== null) {
+                this.svgHandler.unvisitNode({ node: previousNode });
+              }
             }
             pos += 1;
+          } else {
+            let _id;
+            if (this.svgHandler) {
+              if (previousNode !== null) {
+                this.svgHandler.unvisitNode({ node: previousNode });
+              }
+              this.svgHandler.unvisitNode({ node: current });
+              _id = this.svgHandler.drawNode({ value, pos });
+              this.svgHandler.destroyPointer({ name: 'current' });
+            }
+            current.next = new LinkedListNode({ value, _id });
+            clearInterval(intervalId);
+            resolve(true);
           }
-        }, 350);
+        }, this.svgHandler ? 350 : 0);
       });
-    };
-    await loop();
+    return loop();
+  }
+
+  append(value) {
+    if (this.svgHandler !== null) return this.appendSVG(value);
+    // if list is empty
+    if (this.head === null) {
+      this.head = new LinkedListNode({ value });
+      return true;
+    }
+    let current = this.head;
+    // repeat while not at the end of the list
+    while (current.next !== null) {
+      // get to the next element
+      current = current.next;
+    }
+    current.next = new LinkedListNode({ value });
+    return true;
+  }
+
+  async prependSVG(value) {
+    let _id;
+    if (this.svgHandler) {
+      _id = this.svgHandler.drawNode({ value, pos: 0 });
+    }
+    const newHead = new LinkedListNode({ value, _id });
+    newHead.next = this.head;
+    this.svgHandler.moveNode({ node: newHead, pos: 1 });
+    this.head = newHead;
     return true;
   }
 
   prepend(value) {
-    const newHead = new LinkedListNode(value);
+    if (this.svgHandler !== null) return this.prependSVG(value);
+
+    const newHead = new LinkedListNode({ value });
     newHead.next = this.head;
     this.head = newHead;
     return true;
   }
 
-  removeByValue(value, callback = undefined) {
+  async removeByValueSVG(value, callback = undefined) {
     if (this.head === null) return null;
-    if (this.head.value === value) {
+    let pos = 1;
+    const loop = () =>
+      new Promise(resolve => {
+        if (
+          (callback && callback(this.head.value)) ||
+          this.head.value === value
+        ) {
+          this.svgHandler.drawPointer({
+            name: 'current',
+            direction: 'bottom',
+            label: 'current',
+            pos,
+          });
+          this.svgHandler.visitNode({ node: this.head });
+          this.svgHandler.destroyPointer({ name: 'current' });
+          this.svgHandler.removeNode({
+            node: this.head,
+            pos,
+            moveTail: true,
+          });
+          this.head = this.head.next;
+          return resolve(true);
+        }
+
+        // this is my pacer
+        let slow = this.head;
+        this.svgHandler.drawPointer({
+          name: 'slow',
+          direction: 'bottom',
+          label: 'slow',
+          pos,
+        });
+
+        // this has a link to what would become the new tail
+        let fast = slow.next;
+        this.svgHandler.drawPointer({
+          name: 'fast',
+          direction: 'bottom',
+          label: 'fast',
+          pos: pos + 1,
+        });
+        this.svgHandler.visitNode({ node: slow.next });
+        const intervalId = setInterval(() => {
+          if (fast !== null) {
+            pos += 1;
+            this.svgHandler.unvisitNode({ node: slow.next });
+            if (
+              (callback && callback(slow.next.value)) ||
+              slow.next.value === value
+            ) {
+              this.svgHandler.removeNode({
+                node: slow.next,
+                pos,
+                moveTail: true,
+              });
+              slow.next = fast.next;
+              this.svgHandler.destroyPointer({ name: 'slow' });
+              this.svgHandler.destroyPointer({ name: 'fast' });
+              clearInterval(intervalId);
+              return resolve(true);
+            }
+            slow = slow.next;
+            this.svgHandler.movePointer({ name: 'slow', pos });
+            fast = fast.next;
+            this.svgHandler.movePointer({ name: 'fast', pos: pos + 1 });
+            if (fast !== null) {
+              this.svgHandler.visitNode({ node: fast });
+            }
+          } else {
+            this.svgHandler.destroyPointer({ name: 'slow' });
+            this.svgHandler.destroyPointer({ name: 'fast' });
+            clearInterval(intervalId);
+            return resolve(false);
+          }
+        }, 1000);
+      });
+
+    return loop();
+  }
+
+  removeByValue(value, callback = undefined) {
+    if (this.svgHandler !== null) return this.removeByValueSVG(value);
+
+    if (this.head === null) return null;
+    if ((callback && callback(this.head.value)) || this.head.value === value) {
       this.head = this.head.next;
       return true;
     }
@@ -182,7 +252,10 @@ class SinglyLinkedList {
     // this has a link to what would become the new tail
     let fast = slow.next;
     while (slow.next !== null) {
-      if (slow.next.value === value) {
+      if (
+        (callback && callback(slow.next.value)) ||
+        slow.next.value === value
+      ) {
         slow.next = fast.next;
         return true;
       }
@@ -195,8 +268,86 @@ class SinglyLinkedList {
   }
 
   // removes a node at k position and returns true, false if not found
-  removeAtPosition(index) {
+  async removeAtPositionSVG(index) {
     if (this.head === null) return null;
+
+    let pos = 1;
+    const loop = () =>
+      new Promise(resolve => {
+        if (index === pos) {
+          this.svgHandler.drawPointer({
+            name: 'current',
+            direction: 'bottom',
+            label: 'current',
+            pos,
+          });
+          this.svgHandler.visitNode({ node: this.head });
+          this.svgHandler.destroyPointer({ name: 'current' });
+          this.svgHandler.removeNode({
+            node: this.head,
+            pos,
+            moveTail: true,
+          });
+          this.head = this.head.next;
+          return resolve(true);
+        }
+
+        // this is my pacer
+        let slow = this.head;
+        this.svgHandler.drawPointer({
+          name: 'slow',
+          direction: 'bottom',
+          label: 'slow',
+          pos,
+        });
+
+        // this has a link to what would become the new tail
+        let fast = slow.next;
+        this.svgHandler.drawPointer({
+          name: 'fast',
+          direction: 'bottom',
+          label: 'fast',
+          pos: pos + 1,
+        });
+        this.svgHandler.visitNode({ node: slow.next });
+        const intervalId = setInterval(() => {
+          if (fast !== null) {
+            pos += 1;
+            this.svgHandler.unvisitNode({ node: slow.next });
+            if (index === pos) {
+              this.svgHandler.removeNode({
+                node: slow.next,
+                pos,
+                moveTail: true,
+              });
+              slow.next = fast.next;
+              this.svgHandler.destroyPointer({ name: 'slow' });
+              this.svgHandler.destroyPointer({ name: 'fast' });
+              clearInterval(intervalId);
+              return resolve(true);
+            }
+            slow = slow.next;
+            this.svgHandler.movePointer({ name: 'slow', pos });
+            fast = fast.next;
+            this.svgHandler.movePointer({ name: 'fast', pos: pos + 1 });
+            if (fast !== null) {
+              this.svgHandler.visitNode({ node: fast });
+            }
+          } else {
+            this.svgHandler.destroyPointer({ name: 'slow' });
+            this.svgHandler.destroyPointer({ name: 'fast' });
+            clearInterval(intervalId);
+            return resolve(false);
+          }
+        }, 1000);
+      });
+
+    return loop();
+  }
+
+  removeAtPosition(index) {
+    if (this.svgHandler !== null) return this.removeAtPositionSVG(index);
+
     if (index === 1) {
       this.head = this.head.next;
       return true;
@@ -218,7 +369,72 @@ class SinglyLinkedList {
     return false;
   }
 
+  async insertAtPositionSVG(value, index = 1) {
+    if (this.head === null) return null;
+
+    let pos = 1;
+    const loop = () =>
+      new Promise(resolve => {
+        if (index === pos) {
+          this.prependSVG(value);
+          return resolve(true);
+        }
+
+        // this is my pacer
+        let slow = this.head;
+        this.svgHandler.drawPointer({
+          name: 'slow',
+          direction: 'bottom',
+          label: 'slow',
+          pos,
+        });
+
+        // this has a link to what would become the new tail
+        let fast = slow.next;
+        this.svgHandler.drawPointer({
+          name: 'fast',
+          direction: 'bottom',
+          label: 'fast',
+          pos: pos + 1,
+        });
+
+        this.svgHandler.visitNode({ node: slow.next });
+        const intervalId = setInterval(() => {
+          if (fast !== null) {
+            pos += 1;
+            this.svgHandler.unvisitNode({ node: slow.next });
+            if (index === pos) {
+              const _id = this.svgHandler.drawNode({ value, pos });
+              const newNode = new LinkedListNode({ value, _id });
+              newNode.next = fast;
+              slow.next = newNode;
+              this.svgHandler.destroyPointer({ name: 'slow' });
+              this.svgHandler.destroyPointer({ name: 'fast' });
+              clearInterval(intervalId);
+              return resolve(true);
+            }
+            slow = slow.next;
+            this.svgHandler.movePointer({ name: 'slow', pos });
+            fast = fast.next;
+            this.svgHandler.movePointer({ name: 'fast', pos: pos + 1 });
+            if (fast !== null) {
+              this.svgHandler.visitNode({ node: fast });
+            }
+          } else {
+            this.svgHandler.destroyPointer({ name: 'slow' });
+            this.svgHandler.destroyPointer({ name: 'fast' });
+            clearInterval(intervalId);
+            return resolve(false);
+          }
+        }, 1000);
+      });
+
+    return loop();
+  }
+
   insertAtPosition(value, pos = 1) {
+    if (this.svgHandler !== null) return this.insertAtPosition(value, pos);
+
     if (pos === 1) {
       this.prepend(value);
       return true;
@@ -286,7 +502,6 @@ class SinglyLinkedList {
   // find a node at position i
   findAtPosition(pos = 1) {
     if (this.head === null) return null;
-
     let current = this.head;
     let i = 1;
     while (current !== null) {
@@ -301,27 +516,100 @@ class SinglyLinkedList {
 }
 
 class DataStructureSVG {
-  constructor({ svgId = 'whiteboard', visitClass = 'current' }) {
+  constructor(args = { svgId: 'whiteboard', visitClass: 'current' }) {
+    const { svgId, visitClass } = args;
     this.whiteboard = SVG.get(svgId);
     this.visitClass = visitClass;
+    this.pointers = {};
   }
 
   get whiteboardWidth() {
-    return this.whiteboard.width();
+    const { width } = this.whiteboard.viewbox();
+    return width;
   }
 
   get whiteboardHeight() {
-    return this.whiteboard.height();
+    const { height } = this.whiteboard.viewbox();
+    return height;
   }
 
-  unvisitNode(node) {
+  destroyPointer({ name }) {
+    const { id } = this.pointers[name];
+    const pointerFig = SVG.get(id);
+    pointerFig.remove();
+  }
+
+  drawPointer({
+    name,
+    coords = { x: 0, y: 0 },
+    direction = 'top',
+    label,
+    length = 100,
+    offset,
+  }) {
+    const linePoints = new Array(4).fill(null);
+    let labelCoords = { x: 0, y: 0 };
+    switch (direction) {
+      case 'top': {
+        linePoints[0] = 0;
+        linePoints[1] = 0;
+        linePoints[2] = 0;
+        linePoints[3] = length;
+        coords.y -= length;
+        break;
+      }
+      case 'bottom': {
+        linePoints[0] = 0;
+        linePoints[1] = length;
+        linePoints[2] = 0;
+        linePoints[3] = 0;
+        labelCoords.y = length;
+        break;
+      }
+      case 'left': {
+        linePoints[0] = 0;
+        linePoints[1] = 0;
+        linePoints[2] = length;
+        linePoints[3] = 0;
+        break;
+      }
+      case 'right': {
+        linePoints[0] = length;
+        linePoints[1] = 0;
+        linePoints[2] = 0;
+        linePoints[3] = 0;
+        break;
+      }
+      default: {
+      }
+    }
+
+    const pointerFig = this.whiteboard.nested();
+    pointerFig.line(...linePoints);
+    pointerFig.move(coords.x, coords.y + offset);
+    pointerFig.addClass(`pointer pointer-${name}`);
+    pointerFig
+      .text(label.toString())
+      .addClass('pointer-label')
+      .move(labelCoords.x, labelCoords.y);
+    this.pointers[name] = { id: pointerFig.id(), direction };
+  }
+
+  movePointer({ name, pos }) {
+    const { id } = this.pointers[name];
+    const { x, y } = this.calculatePos(pos);
+    const pointerFig = SVG.get(id);
+    pointerFig.cx(x);
+  }
+
+  unvisitNode({ node }) {
     const { visitClass } = this;
     const nodeFig = SVG.get(node._id);
     nodeFig.removeClass(visitClass);
-    console.log('removing lass');
   }
 
-  visitNode(node) {
+  visitNode({ node }) {
+    console.log(node);
     const { visitClass } = this;
     const nodeFig = SVG.get(node._id);
     nodeFig.addClass(visitClass);
@@ -329,8 +617,11 @@ class DataStructureSVG {
 }
 
 class SinglyLinkedListSVG extends DataStructureSVG {
-  constructor({ svgId = 'whiteboard', size = { w: 50, h: 40 }, id }) {
-    super(svgId);
+  constructor(
+    args = { svgId: 'whiteboard', size: { w: 50, h: 40 }, id: undefined },
+  ) {
+    const { svgId, size, id } = args;
+    super({ svgId, visitClass: 'current' });
     this.size = size;
     this.margin = 25;
     this.nodeDistance = 25;
@@ -339,7 +630,9 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     this.drawPointer({
       name: 'head',
       pos: 1,
-      from: 'top',
+      direction: 'top',
+      label: 'head',
+      offset: this.size.h,
     });
   }
 
@@ -351,8 +644,6 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     const y = whiteboardHeight / 2 - h / 2;
     return { x, y };
   }
-
-  moveToPos(nodeId, pos) {}
 
   datumSVG(wrapper, value) {
     const { w, h } = this.size;
@@ -367,10 +658,6 @@ class SinglyLinkedListSVG extends DataStructureSVG {
   nextSVG(wrapper) {
     const w = this.nextBoxWidth;
     const { h } = this.size;
-    /*
-    const pointerCircleRadius = w / 3;
-    
-    */
     const next = wrapper.group();
     next
       .rect(w, h)
@@ -393,17 +680,25 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     */
   }
 
-  drawPointer({ name = 'head', pos = 1, from = 'top' }) {
-    const pointerFig = this.whiteboard.nested();
-    const length = 100;
-    const nodePos = this.calculatePos(pos);
-    const x1 = nodePos.x;
-    const y1 = from === 'top' ? nodePos.y - length : nodePos.y;
-    const x2 = x1;
-    const y2 = from === 'top' ? nodePos.y : nodePos.y + length;
-    pointerFig.line(x1, y1, x2, y2);
-    pointerFig.addClass(`list-pointer list-pointer-${name}`);
-    this.pointers[name] = pointerFig.id();
+  destroyPointer({ name }) {
+    super.destroyPointer({ name });
+  }
+
+  drawPointer({ name, pos = 1, direction = 'top', label, length = 100 }) {
+    let offset = 0;
+    if (direction === 'bottom') {
+      offset = this.size.h;
+    }
+    const coords = this.calculatePos(pos);
+    console.log(coords);
+    super.drawPointer({
+      name,
+      coords,
+      direction,
+      label,
+      length,
+      offset,
+    });
   }
 
   drawNode({ value, pos = 1 }) {
@@ -413,13 +708,40 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     this.nextSVG(nodeFig);
     nodeFig.center(x, y);
     nodeFig.addClass('list-node');
+    console.log(nodeFig.id());
     return nodeFig.id();
   }
 
-  movePointer(pointerName, pos) {
-    const pointerId = this.pointers[pointerName];
-    const pointerFig = SVG.get(pointerId);
-    pointerFig.move(100, 200);
+  drawNull({ pos }) {}
+
+  movePointer({ name, pos = 1 }) {
+    super.movePointer({ name, pos });
+  }
+
+  moveNode({ node, pos = 1 }) {
+    let current = node;
+    let currentPos = pos;
+    while (current !== null) {
+      const { _id } = current;
+      const nodeSVG = SVG.get(_id);
+      const { x, y } = this.calculatePos(currentPos);
+      nodeSVG.animate(200).center(x, y);
+      current = current.next;
+      currentPos += 1;
+    }
+  }
+
+  moveNull({ pos = 1 }) {
+    console.log('will implement');
+  }
+
+  removeNode({ node, pos = 1, moveTail = true }) {
+    let current = node;
+    let currentPos = pos;
+    const dirtyNode = SVG.get(current._id);
+    dirtyNode.remove();
+    current = current.next;
+    this.moveNode({ node: current, pos: currentPos });
   }
 }
 
@@ -452,25 +774,70 @@ class QueueSVG extends DataStructureSVG {
     containerWrapper.addClass('queue-container');
   }
 
-  drawDatum(nodeWrapper, value) {
-    nodeWrapper.rect(100, 100);
-    nodeWrapper.text(value.toString());
-  }
-
   drawNode({ value, pos }) {
     console.info('drawing');
     const nodeWrapper = this.whiteboard.nested();
     this.drawDatum(nodeWrapper, value);
   }
+}
 
-  calculateNodeCoords(pos) {
-    console.info('i');
+// Last In, First Out (LIFO)
+class Stack {
+  constructor() {
+    this.stack = new SinglyLinkedList();
+  }
+
+  pop() {
+    const element = this.stack.findAtPosition(this.stack.length);
+    if (element === null) {
+      return null;
+    }
+    this.stack.removeAtPosition(this.stack.length);
+    return element.value;
+  }
+
+  push(value) {
+    return this.stack.append(value);
+  }
+
+  get top() {
+    return this.stack.findAtPosition(this.stack.length).value;
+  }
+
+  get length() {
+    return this.stack.length;
+  }
+
+  toString() {
+    let i = this.length;
+    let str = '\n';
+    let maxValueLength = 1;
+    // find the longest value length
+    while (i > 0) {
+      // can be improved
+      const { value } = this.stack.findAtPosition(i);
+      const valueLength = value.toString().length;
+      if (maxValueLength < valueLength) {
+        maxValueLength = valueLength;
+      }
+      i -= 1;
+    }
+    i = this.length;
+    while (i > 0) {
+      const { value } = this.stack.findAtPosition(i);
+      str += `| ${value.toString().padEnd(maxValueLength, ' ')} |\n`;
+      if (i === 1) {
+        str += `+${'-'.repeat(maxValueLength + 2)}+\n`;
+      }
+      i -= 1;
+    }
+    return str;
   }
 }
 
 // First in, First Out (FIFO)
 class Queue {
-  constructor(svgHandler = null) {
+  constructor(args = { svgHandler: null }) {
     this.list = new SinglyLinkedList();
   }
 
@@ -509,42 +876,27 @@ class Queue {
     return this.list.head === null;
   }
 
-  toString() {
-    const nodeValues = [];
+  async toString() {
+    const nodeStack = new Stack();
     let currentNode = this.list.head;
-    while (currentNode.next !== null) {
-      nodeValues.unshift(currentNode.value);
+    const pushPromises = [];
+    while (currentNode !== null) {
+      pushPromises.push(nodeStack.push(currentNode.value));
       currentNode = currentNode.next;
     }
-    let str = '';
-    for (let i = 0; i < nodeValues.length; i++) {
-      str += `[${nodeValues[i]}]`;
-      if (i !== nodeValues.length - 1) {
-        str += '->';
+    return Promise.all(pushPromises).then(() => {
+      let str = '\n';
+      let i = nodeStack.length;
+      while (i > 0) {
+        const value = nodeStack.pop();
+        str += `[${value}]`;
+        if (i > 1) {
+          str += '->';
+        }
+        i -= 1;
       }
-    }
-    return str;
-  }
-}
-
-// Last In, First Out (LIFO)
-class Stack {
-  constructor() {
-    this.stack = new SinglyLinkedList();
-  }
-
-  pop() {
-    const element = this.stack.findAtPosition(this.stack.length);
-    this.stack.removeAtPosition(this.stack.length);
-    return element.value;
-  }
-
-  push(value) {
-    return this.stack.append(value);
-  }
-
-  get top() {
-    return this.stack.findAtPosition(this.stack.length);
+      return str;
+    });
   }
 }
 
@@ -563,19 +915,22 @@ class HashTable {
   }
 
   set(key, value) {
+    // generate a hash from a key
     const keyHash = this.hash(key);
     this.keys[key] = keyHash;
+    // get linkedList at bucket position
     const bucketLinkedList = this.buckets[keyHash];
-    const node = bucketLinkedList.findByValue(
-      undefined,
-      value => value.key === key,
-    );
+    // find the node inside the linked list with the key
+    const node = bucketLinkedList.findByValue(undefined, v => v.key === key);
 
-    if (!node) {
-      bucketLinkedList.append({ key, value });
-    } else {
+    // if there is a node then update its value
+    // else add a new node to the list
+    if (node) {
       node.value.value = value;
+    } else {
+      return bucketLinkedList.append({ key, value });
     }
+    return true;
   }
 
   delete(key) {
@@ -610,316 +965,88 @@ class HashTable {
   }
 }
 
-class BinaryTreeNode extends Node {
-  constructor(value, left, right) {
+class BSTNodeSVG extends DataStructureSVG {
+  constructor(
+    args = { svgId: 'whiteboard', size: { w: 50, h: 50 }, id: undefined },
+  ) {
+    const { svgId, size, id } = args;
+    super({ svgId, visitClass: 'current' });
+    this.size = size;
+  }
+}
+
+class BTNode extends DSNode {
+  constructor({ value = null, left = null, right = null }) {
     super(value);
     this.left = left;
     this.right = right;
   }
-
-  static insert() {
-    console.log('Implement this');
-  }
-
-  static getAncestors() {
-    console.log('Implement this');
-  }
-
-  static getLowestCommonAncestor() {
-    console.log('Implement this');
-  }
-
-  static preorderTraversal() {
-    console.log('Implement this');
-  }
-
-  static inorderTraversal() {
-    console.log('Implement this');
-  }
-
-  static postorderTraversal() {
-    console.log('Implement this');
-  }
-
-  static rotateRight() {
-    console.log('Implement this');
-  }
-
-  static rotateLeft() {
-    console.log('Implement this');
-  }
 }
-/*
- *
- * Visual List node
- *  
- */
 
-class VisualSinglyLinkedListNode extends LinkedListNode {}
-
-/*
- *
- * Visual Linked List
- *
- */
-class VisualSinglyLinkedList extends SinglyLinkedList {
-  constructor(whiteboard) {
-    super(null);
-    this._whiteboard = whiteboard;
-    this._nodeSize = { w: 100, h: 40 };
-    this._nodeOffset = this._nodeSize.w * 0.2;
-    this._animationDuration = 250;
-    this._drawHead();
+class BSTNode extends BTNode {
+  constructor({ value = null, left = null, right = null, svgHandler = null }) {
+    super({ value, left, right });
+    this.svgHandler = svgHandler;
   }
 
-  static length(head) {
-    if (head === null) return 0;
-    let length = 1;
-    if (head.next === null) return length;
-    let current = head;
-    while (current.next !== null) {
-      current = current.next;
-      length += 1;
-    }
-    return length;
-  }
+  async insertSVG(value) {}
 
-  // adds a node at the end of list
-  static append(list, value) {
-    let i = 1;
-    // if list is empty
-    if (list.head === null) {
-      const coords = this._calculateCoords(i);
-      return new VisualSinglyLinkedListNode({
-        value,
-        whiteboard: list._whiteboard,
-        pos: coords,
-        size: list._nodeSize,
-      });
-    }
-    let current = list.head;
-    // repeat while not at the end of the list
-    while (current.next !== null) {
-      // get to the next element
-      current = current.next;
-      i += 1;
-    }
-    const coords = this._calculateCoords(i + 1);
-    current.next = new VisualSinglyLinkedListNode({
-      value,
-      whiteboard: list._whiteboard,
-      pos: coords,
-      size: list._nodeSize,
-    });
-    // return new head
-    return list;
-  }
+  insert(value) {
+    if (this.svgHandler !== null) return this.insertSVG(value);
 
-  // finds a node at k position, returns null if not found
-  static findAtPosition(head, index) {
-    if (head === null) return null;
-    let current = head;
-    let i = 1;
-    while (current !== null) {
-      if (index === i) {
-        return current;
+    if (this.value === null) {
+      this.value = value;
+    }
+
+    // go left
+    if (value < this.value) {
+      if (this.left) {
+        return this.left.insert(value);
       }
-      i += 1;
-      current = current.next;
+
+      const newNode = new BSTNode({ value });
+      this.left = newNode;
     }
+    // go right
+    if (value > this.value) {
+      if (this.right) {
+        return this.right.insert(value);
+      }
+
+      const newNode = new BSTNode({ value });
+      this.right = newNode;
+    }
+    return this;
+  }
+
+  async findSVG(value) {}
+
+  find(value) {
+    if (this.svgHandler !== null) return this.findSVG(value);
+
+    if (this.value === value) {
+      return this;
+    }
+
+    if (value < this.value && this.left) {
+      this.left.find(value);
+    }
+
+    if (value > this.value && this.right) {
+      this.right.find(value);
+    }
+
     return null;
   }
 
-  // find the first
-  static findByValue(head, value) {
-    if (head === null) return null;
-    let current = head;
-    while (current !== null) {
-      if (current.value === value) {
-        return current;
-      }
-      current = current.next;
-    }
-    return null;
-  }
+  async containsSVG(value) {}
 
-  static insertAtPosition(head, value, pos = 1) {
-    if (pos === 1) {
-      return VisualSinglyLinkedList.prepend(head, value);
-    }
-    let slow = head;
-    let fast = slow.next;
-    let i = 2;
-    while (slow !== null) {
-      if (pos === i) {
-        const newNode = new VisualSinglyLinkedListNode({
-          value,
-          whiteboard: head._whiteboard,
-          pos: this._calculateCoords(pos),
-          size: head._nodeSize,
-        });
-        newNode.next = fast;
-        this._animateOffsetTail(fast);
-        slow.next = newNode;
-        return head;
-      }
-      i += 1;
-      slow = slow.next;
-      fast = fast.next;
-    }
-    return false;
-  }
-
-  // adds a node at the beggining of the list
-  static prepend(head, value) {
-    const newHead = new VisualSinglyLinkedListNode({
-      value,
-      whiteboard: this._whiteboard,
-      size: this._nodeSize,
-      pos: this._calculateCoords(1),
-    });
-    this._animateOffsetTail(this.head);
-    newHead.next = head;
-    return newHead;
-  }
-
-  // removes a node at k position and returns true, false if not found
-  static removeAtPosition(head, index) {
-    if (head === null) return null;
-    if (index === 1) {
-      this._animateDeleteNode(head);
-      const newHead = head.next;
-      this._animateOffsetTail(head, 'negative');
-      return newHead;
-    }
-    let slow = this.head;
-    let fast = slow.next;
-    let i = 1;
-    while (slow.next !== null) {
-      if (i + 1 === index) {
-        this._animateDeleteNode(slow.next);
-        slow.next = fast.next;
-        this._animateOffsetTail(fast.next, 'negative');
-        return true;
-      }
-      i += 1;
-      slow = slow.next;
-      fast = fast.next;
-    }
-    return false;
-  }
-
-  static removeByValue(head, value) {
-    if (head === null) return null;
-    if (head.value === value) {
-      const newHead = head.next;
-      return newHead;
-    }
-    let slow = this.head;
-    let fast = slow.next;
-    while (slow.next !== null) {
-      if (fast.value === value) {
-        slow.next = fast.next;
-        this.toString();
-        return true;
-      }
-      slow = slow.next;
-      fast = fast.next;
-    }
-    return false;
-  }
-
-  // reverses a linked list
-  static reverse(head) {
-    let current = head;
-    let prevNode = null;
-    let nextNode = null;
-    while (current !== null) {
-      nextNode = current.next;
-      current.next = prevNode;
-      prevNode = current;
-      current = nextNode;
-    }
-    return prevNode;
-  }
-
-  toString() {
-    if (this.head === null) return null;
-    let current = this.head;
-    let str = '';
-    while (current !== null) {
-      str += `[${current.value}]->`;
-      if (current.next === null) {
-        str += 'null';
-      }
-      current = current.next;
-    }
-    return str;
-  }
-
-  _animateOffsetTail(tail, direction = 'positive') {
-    let current = tail;
-    // because we want to move the old head to 2nd position
-    let i = 1;
-    while (current !== null) {
-      const node = SVG(current._id);
-      if (direction === 'positive') {
-        node
-          .animate(this._animationDuration)
-          .attr({ x: node.attr('x') + this._calculateOffset() });
-      } else {
-        node
-          .animate(this._animationDuration)
-          .attr({ x: node.attr('x') - this._calculateOffset(i) });
-      }
-      i += 1;
-      current = current.next;
-    }
-  }
-
-  _animateDeleteNode(node) {
-    const nodeElement = SVG(node._id);
-    nodeElement
-      .animate(this._animationDuration)
-      .attr({ y: nodeElement.attr('y') + 50, opacity: 0 });
-    setTimeout(() => {
-      nodeElement.remove();
-    }, this._animationDuration);
-  }
-
-  _drawHead(pos = 1) {
-    let head = SVG.get('linked-list-head');
-    const [x, y] = Object.values(this._calculateCoords(pos));
-    if (head !== null) {
-      head.center(x, y);
-    } else {
-      head = this._whiteboard.nested();
-      head.text('head').addClass('head');
-      head.line(x + 5, 25, x + 5, 90).addClass('list-node-link');
-      head.attr({ id: 'linked-list-head' });
-      head.center(x / 2, y - 90);
-    }
-  }
-
-  _calculateOffset() {
-    return this._nodeSize.w + this._nodeOffset;
-  }
-
-  static _calculateCoords(pos = 1) {
-    const { _nodeSize } = this;
-    let { _nodeOffset } = this;
-    if (pos > 1) {
-      _nodeOffset *= pos;
-    }
-    const coords = {
-      x: (pos - 1) * _nodeSize.w + _nodeOffset,
-      y: this._whiteboard.height() / 3,
-    };
-    return coords;
+  contains(value) {
+    return !!this.find(value);
   }
 }
 
-class VisualBinaryTreeNode extends BinaryTreeNode {
+class VisualBinaryTreeNode extends BSTNode {
   constructor({
     value,
     left = null,
@@ -1291,7 +1418,7 @@ class VisualBinaryTreeNode extends BinaryTreeNode {
 // export { VisualBinaryTreeNode, VisualSinglyLinkedList };
 
 // import { VisualBinaryTreeNode, VisualSinglyLinkedList } from './dataStructures';
-
+/*
 class Console {
   constructor(wrapper) {
     this.wrapper = document.getElementById(wrapper);
@@ -1320,15 +1447,19 @@ class Console {
     this.count = 0;
   }
 }
+*/
 
 class Whiteboard {
   constructor(state) {
     this.setupListeners();
     this.whiteboard = SVG('whiteboard');
-    this.width = this.whiteboard.width();
-    this.height = this.whiteboard.height();
+    let viewbox = this.whiteboard.viewbox();
+    this.width = viewbox.width;
+    this.height = viewbox.height;
+    console.log(this.height);
+
     this.nodeSize = { w: 70, h: 50 };
-    this.setupConsole();
+    // this.setupConsole();
     this.drawGuides();
   }
 
