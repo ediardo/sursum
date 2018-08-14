@@ -4,7 +4,7 @@
  */
 class DSNode {
   constructor(value = null) {
-    this.value = value || null;
+    this.value = value;
   }
 }
 
@@ -20,7 +20,23 @@ class SinglyLinkedList {
   constructor(args = { head: null, svgHandler: null }) {
     const { head, svgHandler } = args;
     this.head = head || null;
-    this.svgHandler = svgHandler || null;
+    switch (svgHandler) {
+      case 'lists': {
+        this.svgHandler = new SinglyLinkedListSVG();
+        break;
+      }
+      case 'stack': {
+        this.svgHandler = new StackSVG();
+        break;
+      }
+      case 'queue': {
+        this.svgHandler = new QueueSVG();
+        break;
+      }
+      default: {
+        this.svgHandler = null;
+      }
+    }
   }
 
   // return length of the list
@@ -44,7 +60,7 @@ class SinglyLinkedList {
   }
 
   // adds a node at the end of list
-  async append(value) {
+  async appendSVG(value) {
     // if list is empty
     if (this.head === null) {
       let _id;
@@ -65,11 +81,11 @@ class SinglyLinkedList {
       });
     }
     // repeat while not at the end of the list
-    const loop = () => {
-      return new Promise(resolve => {
+    const loop = () =>
+      new Promise(resolve => {
         let previousNode = current;
         if (this.svgHandler) {
-          this.svgHandler.visitNode(current);
+          this.svgHandler.visitNode({ node: current });
         }
         let pos = 2;
         const intervalId = setInterval(() => {
@@ -77,10 +93,10 @@ class SinglyLinkedList {
             previousNode = current;
             current = current.next;
             if (this.svgHandler) {
-              this.svgHandler.visitNode(current);
+              this.svgHandler.visitNode({ node: current });
               this.svgHandler.movePointer({ name: 'current', pos });
               if (previousNode !== null) {
-                this.svgHandler.unvisitNode(previousNode);
+                this.svgHandler.unvisitNode({ node: previousNode });
               }
             }
             pos += 1;
@@ -88,9 +104,9 @@ class SinglyLinkedList {
             let _id;
             if (this.svgHandler) {
               if (previousNode !== null) {
-                this.svgHandler.unvisitNode(previousNode);
+                this.svgHandler.unvisitNode({ node: previousNode });
               }
-              this.svgHandler.unvisitNode(current);
+              this.svgHandler.unvisitNode({ node: current });
               _id = this.svgHandler.drawNode({ value, pos });
               this.svgHandler.destroyPointer({ name: 'current' });
             }
@@ -98,13 +114,29 @@ class SinglyLinkedList {
             clearInterval(intervalId);
             resolve(true);
           }
-        }, this.svgHandler ? 300 : 0);
+        }, this.svgHandler ? 350 : 0);
       });
-    };
     return loop();
   }
 
-  prepend(value) {
+  append(value) {
+    if (this.svgHandler !== null) return this.appendSVG(value);
+    // if list is empty
+    if (this.head === null) {
+      this.head = new LinkedListNode({ value });
+      return true;
+    }
+    let current = this.head;
+    // repeat while not at the end of the list
+    while (current.next !== null) {
+      // get to the next element
+      current = current.next;
+    }
+    current.next = new LinkedListNode({ value });
+    return true;
+  }
+
+  async prependSVG(value) {
     let _id;
     if (this.svgHandler) {
       _id = this.svgHandler.drawNode({ value, pos: 0 });
@@ -116,9 +148,102 @@ class SinglyLinkedList {
     return true;
   }
 
-  removeByValue(value, callback = undefined) {
+  prepend(value) {
+    if (this.svgHandler !== null) return this.prependSVG(value);
+
+    const newHead = new LinkedListNode({ value });
+    newHead.next = this.head;
+    this.head = newHead;
+    return true;
+  }
+
+  async removeByValueSVG(value, callback = undefined) {
     if (this.head === null) return null;
-    if (this.head.value === value) {
+    let pos = 1;
+    const loop = () =>
+      new Promise(resolve => {
+        if (
+          (callback && callback(this.head.value)) ||
+          this.head.value === value
+        ) {
+          this.svgHandler.drawPointer({
+            name: 'current',
+            direction: 'bottom',
+            label: 'current',
+            pos,
+          });
+          this.svgHandler.visitNode({ node: this.head });
+          this.svgHandler.destroyPointer({ name: 'current' });
+          this.svgHandler.removeNode({
+            node: this.head,
+            pos,
+            moveTail: true,
+          });
+          this.head = this.head.next;
+          return resolve(true);
+        }
+
+        // this is my pacer
+        let slow = this.head;
+        this.svgHandler.drawPointer({
+          name: 'slow',
+          direction: 'bottom',
+          label: 'slow',
+          pos,
+        });
+
+        // this has a link to what would become the new tail
+        let fast = slow.next;
+        this.svgHandler.drawPointer({
+          name: 'fast',
+          direction: 'bottom',
+          label: 'fast',
+          pos: pos + 1,
+        });
+        this.svgHandler.visitNode({ node: slow.next });
+        const intervalId = setInterval(() => {
+          if (fast !== null) {
+            pos += 1;
+            this.svgHandler.unvisitNode({ node: slow.next });
+            if (
+              (callback && callback(slow.next.value)) ||
+              slow.next.value === value
+            ) {
+              this.svgHandler.removeNode({
+                node: slow.next,
+                pos,
+                moveTail: true,
+              });
+              slow.next = fast.next;
+              this.svgHandler.destroyPointer({ name: 'slow' });
+              this.svgHandler.destroyPointer({ name: 'fast' });
+              clearInterval(intervalId);
+              return resolve(true);
+            }
+            slow = slow.next;
+            this.svgHandler.movePointer({ name: 'slow', pos });
+            fast = fast.next;
+            this.svgHandler.movePointer({ name: 'fast', pos: pos + 1 });
+            if (fast !== null) {
+              this.svgHandler.visitNode({ node: fast });
+            }
+          } else {
+            this.svgHandler.destroyPointer({ name: 'slow' });
+            this.svgHandler.destroyPointer({ name: 'fast' });
+            clearInterval(intervalId);
+            return resolve(false);
+          }
+        }, 1000);
+      });
+
+    return loop();
+  }
+
+  removeByValue(value, callback = undefined) {
+    if (this.svgHandler !== null) return this.removeByValueSVG(value);
+
+    if (this.head === null) return null;
+    if ((callback && callback(this.head.value)) || this.head.value === value) {
       this.head = this.head.next;
       return true;
     }
@@ -127,7 +252,10 @@ class SinglyLinkedList {
     // this has a link to what would become the new tail
     let fast = slow.next;
     while (slow.next !== null) {
-      if (slow.next.value === value) {
+      if (
+        (callback && callback(slow.next.value)) ||
+        slow.next.value === value
+      ) {
         slow.next = fast.next;
         return true;
       }
@@ -140,8 +268,86 @@ class SinglyLinkedList {
   }
 
   // removes a node at k position and returns true, false if not found
-  removeAtPosition(index) {
+  async removeAtPositionSVG(index) {
     if (this.head === null) return null;
+
+    let pos = 1;
+    const loop = () =>
+      new Promise(resolve => {
+        if (index === pos) {
+          this.svgHandler.drawPointer({
+            name: 'current',
+            direction: 'bottom',
+            label: 'current',
+            pos,
+          });
+          this.svgHandler.visitNode({ node: this.head });
+          this.svgHandler.destroyPointer({ name: 'current' });
+          this.svgHandler.removeNode({
+            node: this.head,
+            pos,
+            moveTail: true,
+          });
+          this.head = this.head.next;
+          return resolve(true);
+        }
+
+        // this is my pacer
+        let slow = this.head;
+        this.svgHandler.drawPointer({
+          name: 'slow',
+          direction: 'bottom',
+          label: 'slow',
+          pos,
+        });
+
+        // this has a link to what would become the new tail
+        let fast = slow.next;
+        this.svgHandler.drawPointer({
+          name: 'fast',
+          direction: 'bottom',
+          label: 'fast',
+          pos: pos + 1,
+        });
+        this.svgHandler.visitNode({ node: slow.next });
+        const intervalId = setInterval(() => {
+          if (fast !== null) {
+            pos += 1;
+            this.svgHandler.unvisitNode({ node: slow.next });
+            if (index === pos) {
+              this.svgHandler.removeNode({
+                node: slow.next,
+                pos,
+                moveTail: true,
+              });
+              slow.next = fast.next;
+              this.svgHandler.destroyPointer({ name: 'slow' });
+              this.svgHandler.destroyPointer({ name: 'fast' });
+              clearInterval(intervalId);
+              return resolve(true);
+            }
+            slow = slow.next;
+            this.svgHandler.movePointer({ name: 'slow', pos });
+            fast = fast.next;
+            this.svgHandler.movePointer({ name: 'fast', pos: pos + 1 });
+            if (fast !== null) {
+              this.svgHandler.visitNode({ node: fast });
+            }
+          } else {
+            this.svgHandler.destroyPointer({ name: 'slow' });
+            this.svgHandler.destroyPointer({ name: 'fast' });
+            clearInterval(intervalId);
+            return resolve(false);
+          }
+        }, 1000);
+      });
+
+    return loop();
+  }
+
+  removeAtPosition(index) {
+    if (this.svgHandler !== null) return this.removeAtPositionSVG(index);
+
     if (index === 1) {
       this.head = this.head.next;
       return true;
@@ -163,7 +369,72 @@ class SinglyLinkedList {
     return false;
   }
 
+  async insertAtPositionSVG(value, index = 1) {
+    if (this.head === null) return null;
+
+    let pos = 1;
+    const loop = () =>
+      new Promise(resolve => {
+        if (index === pos) {
+          this.prependSVG(value);
+          return resolve(true);
+        }
+
+        // this is my pacer
+        let slow = this.head;
+        this.svgHandler.drawPointer({
+          name: 'slow',
+          direction: 'bottom',
+          label: 'slow',
+          pos,
+        });
+
+        // this has a link to what would become the new tail
+        let fast = slow.next;
+        this.svgHandler.drawPointer({
+          name: 'fast',
+          direction: 'bottom',
+          label: 'fast',
+          pos: pos + 1,
+        });
+
+        this.svgHandler.visitNode({ node: slow.next });
+        const intervalId = setInterval(() => {
+          if (fast !== null) {
+            pos += 1;
+            this.svgHandler.unvisitNode({ node: slow.next });
+            if (index === pos) {
+              const _id = this.svgHandler.drawNode({ value, pos });
+              const newNode = new LinkedListNode({ value, _id });
+              newNode.next = fast;
+              slow.next = newNode;
+              this.svgHandler.destroyPointer({ name: 'slow' });
+              this.svgHandler.destroyPointer({ name: 'fast' });
+              clearInterval(intervalId);
+              return resolve(true);
+            }
+            slow = slow.next;
+            this.svgHandler.movePointer({ name: 'slow', pos });
+            fast = fast.next;
+            this.svgHandler.movePointer({ name: 'fast', pos: pos + 1 });
+            if (fast !== null) {
+              this.svgHandler.visitNode({ node: fast });
+            }
+          } else {
+            this.svgHandler.destroyPointer({ name: 'slow' });
+            this.svgHandler.destroyPointer({ name: 'fast' });
+            clearInterval(intervalId);
+            return resolve(false);
+          }
+        }, 1000);
+      });
+
+    return loop();
+  }
+
   insertAtPosition(value, pos = 1) {
+    if (this.svgHandler !== null) return this.insertAtPosition(value, pos);
+
     if (pos === 1) {
       this.prepend(value);
       return true;
@@ -331,13 +602,13 @@ class DataStructureSVG {
     pointerFig.cx(x);
   }
 
-  unvisitNode(node) {
+  unvisitNode({ node }) {
     const { visitClass } = this;
     const nodeFig = SVG.get(node._id);
     nodeFig.removeClass(visitClass);
   }
 
-  visitNode(node) {
+  visitNode({ node }) {
     console.log(node);
     const { visitClass } = this;
     const nodeFig = SVG.get(node._id);
@@ -374,8 +645,6 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     return { x, y };
   }
 
-  moveToPos(nodeId, pos) {}
-
   datumSVG(wrapper, value) {
     const { w, h } = this.size;
     const datum = wrapper.group();
@@ -411,6 +680,10 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     */
   }
 
+  destroyPointer({ name }) {
+    super.destroyPointer({ name });
+  }
+
   drawPointer({ name, pos = 1, direction = 'top', label, length = 100 }) {
     let offset = 0;
     if (direction === 'bottom') {
@@ -439,6 +712,8 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     return nodeFig.id();
   }
 
+  drawNull({ pos }) {}
+
   movePointer({ name, pos = 1 }) {
     super.movePointer({ name, pos });
   }
@@ -456,8 +731,17 @@ class SinglyLinkedListSVG extends DataStructureSVG {
     }
   }
 
-  destroyPointer({ name }) {
-    super.destroyPointer({ name });
+  moveNull({ pos = 1 }) {
+    console.log('will implement');
+  }
+
+  removeNode({ node, pos = 1, moveTail = true }) {
+    let current = node;
+    let currentPos = pos;
+    const dirtyNode = SVG.get(current._id);
+    dirtyNode.remove();
+    current = current.next;
+    this.moveNode({ node: current, pos: currentPos });
   }
 }
 
@@ -490,19 +774,10 @@ class QueueSVG extends DataStructureSVG {
     containerWrapper.addClass('queue-container');
   }
 
-  drawDatum(nodeWrapper, value) {
-    nodeWrapper.rect(100, 100);
-    nodeWrapper.text(value.toString());
-  }
-
   drawNode({ value, pos }) {
     console.info('drawing');
     const nodeWrapper = this.whiteboard.nested();
     this.drawDatum(nodeWrapper, value);
-  }
-
-  calculateNodeCoords(pos) {
-    console.info('i');
   }
 }
 
@@ -526,7 +801,7 @@ class Stack {
   }
 
   get top() {
-    return this.stack.findAtPosition(this.stack.length);
+    return this.stack.findAtPosition(this.stack.length).value;
   }
 
   get length() {
@@ -690,48 +965,88 @@ class HashTable {
   }
 }
 
-class BSTNode extends DSNode {
-  constructor(args = { value: null, left: null, right: null }) {
-    const { value, left, right } = args;
+class BSTNodeSVG extends DataStructureSVG {
+  constructor(
+    args = { svgId: 'whiteboard', size: { w: 50, h: 50 }, id: undefined },
+  ) {
+    const { svgId, size, id } = args;
+    super({ svgId, visitClass: 'current' });
+    this.size = size;
+  }
+}
+
+class BTNode extends DSNode {
+  constructor({ value = null, left = null, right = null }) {
     super(value);
     this.left = left;
     this.right = right;
   }
+}
 
-  static insert() {
-    console.log('Implement this');
+class BSTNode extends BTNode {
+  constructor({ value = null, left = null, right = null, svgHandler = null }) {
+    super({ value, left, right });
+    this.svgHandler = svgHandler;
   }
 
-  static getAncestors() {
-    console.log('Implement this');
+  async insertSVG(value) {}
+
+  insert(value) {
+    if (this.svgHandler !== null) return this.insertSVG(value);
+
+    if (this.value === null) {
+      this.value = value;
+    }
+
+    // go left
+    if (value < this.value) {
+      if (this.left) {
+        return this.left.insert(value);
+      }
+
+      const newNode = new BSTNode({ value });
+      this.left = newNode;
+    }
+    // go right
+    if (value > this.value) {
+      if (this.right) {
+        return this.right.insert(value);
+      }
+
+      const newNode = new BSTNode({ value });
+      this.right = newNode;
+    }
+    return this;
   }
 
-  static getLowestCommonAncestor() {
-    console.log('Implement this');
+  async findSVG(value) {}
+
+  find(value) {
+    if (this.svgHandler !== null) return this.findSVG(value);
+
+    if (this.value === value) {
+      return this;
+    }
+
+    if (value < this.value && this.left) {
+      this.left.find(value);
+    }
+
+    if (value > this.value && this.right) {
+      this.right.find(value);
+    }
+
+    return null;
   }
 
-  static preorderTraversal() {
-    console.log('Implement this');
-  }
+  async containsSVG(value) {}
 
-  static inorderTraversal() {
-    console.log('Implement this');
-  }
-
-  static postorderTraversal() {
-    console.log('Implement this');
-  }
-
-  static rotateRight() {
-    console.log('Implement this');
-  }
-
-  static rotateLeft() {
-    console.log('Implement this');
+  contains(value) {
+    return !!this.find(value);
   }
 }
 
-class VisualBinaryTreeNode extends BinaryTreeNode {
+class VisualBinaryTreeNode extends BSTNode {
   constructor({
     value,
     left = null,
