@@ -981,19 +981,32 @@ class BTNode extends DSNode {
     this.left = left;
     this.right = right;
   }
+
+  // NLR
+  preorderTraversal() {
+    console.log(this.value);
+    if (this.left) {
+      this.left.preorderTraversal();
+    }
+    if (this.right) {
+      this.right.preorderTraversal();
+    }
+  }
 }
 
 class BSTNode extends BTNode {
-  constructor({ value = null, left = null, right = null, svgHandler = null }) {
+  constructor(args = { value: null, left: null, right: null }) {
+    const { value, left, right } = args;
+    console.log(args);
     super({ value, left, right });
-    this.svgHandler = svgHandler;
+    this.svgHandler = null;
   }
 
-  async insertSVG(value) {}
+  async insertSVG(value) {
+    console.log('here');
+  }
 
   insert(value) {
-    if (this.svgHandler !== null) return this.insertSVG(value);
-
     if (this.value === null) {
       this.value = value;
     }
@@ -1022,8 +1035,6 @@ class BSTNode extends BTNode {
   async findSVG(value) {}
 
   find(value) {
-    if (this.svgHandler !== null) return this.findSVG(value);
-
     if (this.value === value) {
       return this;
     }
@@ -1043,6 +1054,36 @@ class BSTNode extends BTNode {
 
   contains(value) {
     return !!this.find(value);
+  }
+
+  async removeSVG(value) {}
+
+  remove(value) {}
+}
+
+class BST {
+  constructor() {
+    this.root = new BSTNode();
+  }
+
+  insert(value) {
+    return this.root.insert(value);
+  }
+
+  contains(value) {
+    return this.root.contains(value);
+  }
+
+  remove(value) {
+    return this.root.remove(value);
+  }
+
+  preorderTraversal() {
+    return this.root.preorderTraversal();
+  }
+
+  toString() {
+    return this.root.toString();
   }
 }
 
