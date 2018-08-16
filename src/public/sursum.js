@@ -842,6 +842,7 @@ class Queue {
   }
 
   enqueue(value) {
+    if (value === null) return;
     return this.list.append(value);
   }
 
@@ -992,6 +993,60 @@ class BTNode extends DSNode {
       this.right.preorderTraversal();
     }
   }
+
+  // LNR
+  inorderTraversal() {
+    if (this.left) {
+      this.left.inorderTraversal();
+    }
+    console.log(this.value);
+    if (this.right) {
+      this.right.inorderTraversal();
+    }
+  }
+
+  // LRN
+  postorderTraversal() {
+    if (this.left) {
+      this.left.postorderTraversal();
+    }
+    if (this.right) {
+      this.right.postorderTraversal();
+    }
+    console.log(this.value);
+  }
+
+  levelorderTraversal() {
+    if (this.value === null) return null;
+    const q = new Queue();
+    q.enqueue(this);
+    while (!q.isEmpty()) {
+      const node = q.dequeue();
+      q.enqueue(node.left);
+      q.enqueue(node.right);
+    }
+  }
+
+  bfs({ value, callback }) {
+    if (this.value === null) return null;
+
+    const q = new Queue();
+    q.enqueue(this);
+    while (!q.isEmpty()) {
+      const node = q.dequeue();
+      if (callback) {
+        if (callback(node.value)) {
+          return node;
+        }
+      } else if (value === node.value) {
+        return node;
+      }
+      q.enqueue(node.left);
+      q.enqueue(node.right);
+    }
+  }
+
+  // dfs(value) {}
 }
 
 class BSTNode extends BTNode {
@@ -1082,6 +1137,31 @@ class BST {
     return this.root.preorderTraversal();
   }
 
+  inorderTraversal() {
+    return this.root.inorderTraversal();
+  }
+
+  postorderTraversal() {
+    return this.root.postorderTraversal();
+  }
+
+  levelorderTraversal() {
+    return this.root.levelorderTraversal();
+  }
+
+  bfs(value) {
+    return this.root.bfs({ value });
+  }
+
+  createFullTree() {
+    this.root.insert(100);
+    this.root.insert(50);
+    this.root.insert(150);
+    this.root.insert(25);
+    this.root.insert(75);
+    this.root.insert(125);
+    this.root.insert(175);
+  }
   toString() {
     return this.root.toString();
   }
